@@ -1,6 +1,9 @@
 import re
 import pandas as pd
 from datetime import datetime
+import decimal
+import random
+
 
 
 def date_to_month(date):
@@ -80,7 +83,7 @@ def enrich_with_kpi_values(input, output):
     return enriched_input
 
 def kpi_updated(row):
-    if (str(row['KPIValueNew']).strip() == str(row['KPIValue_Compare']).strip().upper()):
+    if (str(row['KPIValueNew']).strip() == str(row['KPIValueCompare']).strip().upper()):
         row['hasUpdate'] = False
     else:
         row['hasUpdate'] = True
@@ -98,8 +101,10 @@ def get_new_corrections_daily(input):
                                 "Input_File_New": "FileNew", "KPIValue_Old": "KPIValueOld",
                                 "KPIValue_New": "KPIValueNew", "KPIValue_Compare": "KPIValueCompare",
                                 "Input_File": "FileNew"}, inplace=True)
+    print(corrections.columns)
+
     corrections["hasUpdate"] = False
-    corrections.apply(lambda row: kpi_updated(row))
+    corrections.apply(lambda row: kpi_updated(row), axis = 1)
 
     new_corrections = corrections[corrections['hasUpdate'] == True]
     return new_corrections[["Key_Corr", "DatumKPI", "KPINameQVD", "Natco", "KPIValueOld", "KPIValueNew",
@@ -144,3 +149,17 @@ def get_update(new_corrections, input_cleaned, kpi_column, granularity):
             "was_corrected_Flag"]]
     monthly_update.drop_duplicates(subset=['KPI name', 'Date'])
     return monthly_update
+
+def number_shaver(ch,
+                  regx = re.compile('(?<![\d.])0*(?:'
+                                    '(\d+)\.?|\.(0)'
+                                    '|(\.\d+?)|(\d+\.\d+?)'
+                                    ')0*(?![\d.])')  ,
+                  repl = lambda mat: mat.group(mat.lastindex)
+                                     if mat.lastindex!=3
+                                     else '0' + mat.group(3) ):
+
+    ret = regx.sub(repl,ch)
+    if (pd.isna(ret) or ret == 'nan'):
+        ret = ''
+    return ret
