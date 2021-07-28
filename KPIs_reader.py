@@ -12,5 +12,5 @@ class KPI_reader:
                       ).rename(columns={'EDWH KPI_ID': 'EDWH_KPI_ID', 'KPI name': 'EDWH_KPI_Name'})
 
         kpis_filtered = raw[raw.EDWH_KPI_ID.notnull()]
-        kpis_filtered.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+        kpis_filtered= kpis_filtered.applymap(lambda x: x.strip().upper() if isinstance(x, str) else x)
         return kpis_filtered

@@ -68,6 +68,9 @@ class DailyProcessor:
         input['Input_File'] = self.filename
         input['Input_File_Time'] = self.filename_timestamp
         input['Input_ID'] = input.apply(lambda x: "{}-{}-{}-d".format(x['Natco'], x['KPINameDaily'], x['DatumKPI']), axis=1)
+        input['KPIValue'] = input['KPIValue'].apply(lambda x: str(x).replace(",", "."))
+        input = input[input['KPIValue'].str.contains("[0-9\.,]", regex=True)]
+        input['KPIValue'] = input['Value'].apply(lambda x: float(x))
         print("INPUT DATA ROW COUNT: "+str(input.shape[0]))
 
         input_cleaned = input[["Input_ID","Marker", "DatumKPI", "TimestampTo", "Natco", "SourceSystem",

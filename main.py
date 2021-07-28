@@ -4,7 +4,7 @@ from structures import daily_header, daily_raw_header
 from functions import format_date
 from KPIs_reader import KPI_reader
 from DailyProcessor import DailyProcessor
-from WeeklyProcessing import WeeklyProcessing
+from Weekly_input import Weekly_input
 from MonthlyInputProcessing import MonthlyInputsProcessor
 from datetime import datetime
 
@@ -67,8 +67,8 @@ def run_input_processing(natco,mode,basepath,corrections, period):
                                     corrections_file=corrections,natco=natco,
                                     filename=input, filename_timestamp=timestamp_str )
         elif (period == 'weekly'):
-            processor = WeeklyProcessing(weekly_output=output, raw_input=input_data, corrections=corrections,
-                                   natco=natco, filename=input,filename_timestamp=timestamp_str)
+            processor = Weekly_input(weekly_output=output, raw_input=input_data, corrections=corrections,
+                                     natco=natco, filename=input, filename_timestamp=timestamp_str)
         else:
             processor = MonthlyInputsProcessor(monthly_output=output, raw_input=input_data,
                                           corrections=corrections, natco=natco,
