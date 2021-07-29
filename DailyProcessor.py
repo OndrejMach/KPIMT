@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import time
+from datetime import datetime
 
 from functions import get_date, get_new_corrections_daily, number_shaver
 
@@ -12,14 +13,16 @@ class DailyProcessor:
     natco = None
     filename=None
     filename_timestamp=None
+    datetime_format='%Y%m%d%H%M%S'
 
-    def __init__(self, daily_output, corrections_file,daily_input, natco,filename,filename_timestamp ):
+    def __init__(self, daily_output, corrections_file,daily_input, natco,filename,filename_timestamp,datetime_format='%Y%m%d%H%M%S' ):
         self.daily_input=daily_input
         self.corrections_file=corrections_file
         self.daily_output=daily_output
         self.natco=natco
         self.filename=filename
         self.filename_timestamp=filename_timestamp
+        self.datetime_format = datetime_format
 
     def process_data(self):
         def get_comment(df):
@@ -27,28 +30,6 @@ class DailyProcessor:
                 return "null"
             else:
                 return df['DatumKPI'].iloc[0]
-
-        def update_corrections(row):
-            if (pd.isna(row['CommentFileOld']) or len(row['CommentFileOld'])==0):
-                row['CommentFile_Compare'] = row['CommentFileNew']
-                return row
-            else:
-                row['CommentFile_Compare'] = row['CommentFileOld']
-                return row
-
-        def was_corrected(row):
-            if (pd.isna(row['Key_Corr'])):
-                row['was_corrected_Flag'] = ""
-            else:
-                row['was_corrected_Flag'] = "Correction"
-            return row
-
-        def update_kpi_value(row):
-            if pd.isna(row['KPIValue_Old']) :
-                row['KPIValue_Compare'] = row['KPIValue_New']
-            else:
-                row['KPIValue_Compare'] = row['KPIValue_Old']
-            return row
 
         def value_compare_set(row):
             if (pd.isna(row['KPIValueCompare'])):
@@ -62,7 +43,7 @@ class DailyProcessor:
 
 
         input = self.daily_input[(self.daily_input['Marker'] == 'L') & (self.daily_input['KPIValue'].notna())].copy()
-        input['DatumKPI'] = input['DatumKPI'].map(lambda x: get_date(x))
+        input['DatumKPI'] = input['DatumKPI'].map(lambda x: datetime.strptime(x,self.datetime_format).strftime("%d.%m.%Y"))
         input['Natco'] = self.natco
         input['KPINameDaily'] = input['KPINameDaily'].map(lambda x: str(x).upper().strip())
         input['Input_File'] = self.filename
@@ -121,10 +102,7 @@ class DailyProcessor:
         Update_Corr['correction_timestamp'] = time.time()
         #Update_Corr = Update_Corr[['Key_Corr','DatumKPI','KPINameQVD','Natco','KPIValueOld','KPIValueNew','KPIValueCompare','CommentRowOld','CommentRowNew','CommentFileOld','CommentFileCompare','TimestampCorrFile','FileOld','FileNew','Granularity']]
         Update_Corr = Update_Corr[Update_Corr['KPIValueNew'] != Update_Corr['KPIValueCompare']]
-        Update_Corr = Update_Corr[['Key_Corr','DatumKPI','KPINameQVD','Natco',
-                                      'KPIValueOld','KPIValueNew','CommentRowOld',
-                                      'CommentRowNew','CommentFileOld','TimestampCorrFile',
-                                      'FileOld','FileNew','Granularity', 'correction_timestamp']]
+        Update_Corr = Update_Corr[corr.columns]
         correction_result = pd.concat([corr,Update_Corr])
 
         print("NEW CORRECTION FILE ROW COUNT: "+str(correction_result.shape[0]))

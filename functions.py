@@ -1,10 +1,32 @@
 import re
 import pandas as pd
 from datetime import datetime
+from os import listdir, stat
+from confs import paths
+from structures import  daily_raw_header
+from os.path import isfile, join
 import decimal
 import random
 
+def get_files(path):
+    files= [f for f in listdir(path) if isfile(join(path, f))]
+    print(files)
+    return sorted(files, key=lambda t: stat(path+t).st_mtime)
 
+def get_path(basepath,natco, mode):
+    return "{}/{}/{}/".format(basepath,natco,paths[mode])
+
+def get_file_timestamp(file_path):
+    fs = stat(file_path)
+    print("getting timestamp for a file: "+file_path)
+    timestamp = fs.st_mtime
+    return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d-%H:%M:%S')
+
+def get_input_data(file):
+    if (str(file).endswith(".csv")):
+        return pd.read_csv(file,delimiter='|', header=None, names=daily_raw_header)
+    if (str(file).endswith("xls") or str(file).endswith("xlsx")):
+        return pd.read_excel(file, header=0)
 
 def date_to_month(date):
     return "00{}{}".format(date[4:6], date[0:4])

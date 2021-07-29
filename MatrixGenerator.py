@@ -99,10 +99,10 @@ class MatrixGeneratorDaily:
             matrix_month_enriched = matrix_month[matrix_month['Natco'] == self.natCo].apply(lambda row: get_key(row, 'm'),
                                                                                        axis=1)
             to_join = [matrix_month_enriched.rename(columns={'KEY1': 'Input_ID'})] + get_lookups(monthly_out) + [RemarksMAP]
-            result_monthy = all_join(to_join)
+            result_monthly = all_join(to_join)
 
 
-        return {"daily_matrix": result_daily, "weekly_matrix": result_weekly, "monthly_matrix": result_monthy}
+        return {"daily_matrix": result_daily, "weekly_matrix": result_weekly, "monthly_matrix": result_monthly}
         
 
 
