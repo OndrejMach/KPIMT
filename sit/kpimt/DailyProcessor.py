@@ -1,9 +1,8 @@
-import pandas as pd
-import numpy as np
 import time
 from datetime import datetime
 
-from functions import get_date, get_new_corrections_daily, number_shaver
+import numpy as np
+import pandas as pd
 
 
 class DailyProcessor:
@@ -41,17 +40,25 @@ class DailyProcessor:
                 row['CommentFileCompare'] = row['CommentFileNew']
             return row
 
+        def get_input_id(row):
+            row['Input_ID'] = "{}-{}-{}-d".format(row['Natco'], row['KPINameDaily'], row['DatumKPI'])
+            return row
 
-        input = self.daily_input[(self.daily_input['Marker'] == 'L') & (self.daily_input['KPIValue'].notna())].copy()
+
+
+        print("INPUT DATA ROW COUNT: " + str(self.daily_input.shape[0]))
+        input = self.daily_input[(self.daily_input['Marker'] == 'L') & (self.daily_input['Value'].notna())].copy()
         input['DatumKPI'] = input['DatumKPI'].map(lambda x: datetime.strptime(x,self.datetime_format).strftime("%d.%m.%Y"))
         input['Natco'] = self.natco
         input['KPINameDaily'] = input['KPINameDaily'].map(lambda x: str(x).upper().strip())
         input['Input_File'] = self.filename
         input['Input_File_Time'] = self.filename_timestamp
-        input['Input_ID'] = input.apply(lambda x: "{}-{}-{}-d".format(x['Natco'], x['KPINameDaily'], x['DatumKPI']), axis=1)
-        input['KPIValue'] = input['KPIValue'].apply(lambda x: str(x).replace(",", "."))
-        input = input[input['KPIValue'].str.contains("[0-9\.,]", regex=True)]
-        input['KPIValue'] = input['Value'].apply(lambda x: float(x))
+        input['Input_ID'] = None
+        input = input.apply(lambda x: get_input_id(x), axis=1)
+        input['KPIValue'] = input['Value'].apply(lambda x: str(x).replace(",", "."))
+        input = input[input['KPIValue'].astype(str).str.contains("[0-9\.,]", regex=True)]
+        input['KPIValue'] = input['KPIValue'].apply(lambda x: float(x))
+        input['Value'] = input['KPIValue']
         print("INPUT DATA ROW COUNT: "+str(input.shape[0]))
 
         input_cleaned = input[["Input_ID","Marker", "DatumKPI", "TimestampTo", "Natco", "SourceSystem",
@@ -84,8 +91,8 @@ class DailyProcessor:
 
         corr = self.corrections_file[['Key_Corr','DatumKPI','KPINameQVD','Natco',
                                       'KPIValueOld','KPIValueNew','CommentRowOld',
-                                      'CommentRowNew','CommentFileOld','TimestampCorrFile',
-                                      'FileOld','FileNew','Granularity', 'correction_timestamp']].copy()
+                                      'CommentRowNew','CommentFileOld','CommentFileNew','TimestampCorrFile',
+                                      'Granularity','FileOld','FileNew', 'correction_timestamp']].copy()
 
         CommentFileOld_Map = self.corrections_file.fillna('').groupby(['Key_Corr']).agg(CommentFileOld=("CommentFileNew", np.max)).reset_index().rename(columns={'Key_Corr': 'Input_ID'}).drop_duplicates()
         CommentFileCompare_Map = CommentFileOld_Map.rename(columns={'CommentFileOld': 'CommentFileCompare'})
@@ -130,73 +137,6 @@ class DailyProcessor:
         print("OUTPUT COUNT: "+str(output.shape[0]))
         return {"output": output, "corrections": correction_result}
 
-
-        #NewestCommentsPerKPI.to_csv("/Users/ondrejmachacek/tmp/KPI/output/blbost.txt")
-
-
-
-
-
-
-
-
-
-
-        # input_to_enrich = input_cleaned.rename(columns={"KPIValue" : "KPIValue_New", "Input_File": "Input_File_New"})
-        # input_to_enrich['CommentFileNew'] = comment
-        # input_to_enrich['Input_File_Time'] = self.filename_timestamp
-        # input_enriched = pd.merge(input_to_enrich, output, left_on="Input_ID", right_on="Input_ID", how="left")
-        # input_enriched['KPIValue_Compare'] = None
-        # input_enriched = input_enriched.apply(lambda row: update_kpi_value(row), axis=1)
-        #
-        # print("INPUT CLEANED: "+str(input_cleaned.shape[0]))
-        # print("INPUT ENRICHED: " + str(input_enriched.shape[0]))
-        #
-        # corrections_file = self.corrections_file.sort_values(by=["Key_Corr","CommentFileNew" ])
-        # latest_corrections = corrections_file.groupby(["Key_Corr"]).agg(CommentFileOld=("CommentFileNew", "last")).reset_index()
-        # latest_corrections.rename(columns={"Key_Corr":"Key_Corr_Old"}, inplace=True)
-        # input_enriched.rename(columns={"Input_ID": "Key_Corr"}, inplace=True)
-        #
-        # #print(latest_corrections.info)
-        # #print(input_enriched.info)
-        #
-        # correction_update = pd.merge(input_enriched,latest_corrections, left_on="Key_Corr", right_on="Key_Corr_Old", how="left" )
-        # correction_update['CommentFile_Compare'] = None
-        # correction_update = correction_update.apply(lambda row: update_corrections(row), axis=1)
-        #
-        # new_corrections = get_new_corrections_daily(correction_update)
-        # all_corrections = pd.concat([new_corrections, self.corrections_file])
-        #
-        # print(all_corrections.columns)
-        #
-        # print("ALL_CORRECTIONS: " + str(all_corrections.shape[0]))
-        #
-        # input_cleaned.rename(columns={"DatumKPI":"Date", "Natco": "Region", "KPINameDaily": "KPI_ID","KPIValue":"Value"}, inplace=True)
-        # daily_update = pd.merge(input_cleaned,all_corrections, left_on="Input_ID", right_on="Key_Corr", how="left" )
-        # daily_update['was_corrected_Flag'] =""
-        # print(daily_update.columns)
-        # daily_update = daily_update.apply(lambda row: was_corrected(row), axis=1)
-        # print(daily_update.columns)
-        #
-        # daily_update = daily_update[["Input_ID","Date", "TimestampTo", "Region", "SourceSystem", "KPI_ID", "Denominator", "Numerator", "Value", "Input_File", "was_corrected_Flag"]].astype(str)
-        #
-        # print("DAILY_UPDATE: " + str(all_corrections.shape[0]))
-        # print(self.daily_output.columns)
-        # print(daily_update.columns)
-        #
-        #
-        # outer_join = self.daily_output.merge(daily_update, how='outer', indicator=True)
-        # anti_join = outer_join[~(outer_join._merge == 'both')].drop('_merge', axis = 1)
-        # all = pd.concat([daily_update,anti_join])
-        # #all['Value'] = all['Value'].apply(lambda x: number_shaver(str(x)))
-        # #all['Denominator'] = all['Denominator'].apply(lambda x: number_shaver(str(x)))
-        # #all['Numerator'] = all['Numerator'].apply(lambda x: number_shaver(str(x)))
-        # all['Value'] = all['Value'].fillna('')
-        # all['Denominator'] = all['Denominator'].fillna('')
-        # all['Numerator'] = all['Numerator'].fillna('')
-
-        #print(daily_update.info)
-       # return {"output" : all, "corrections": all_corrections}
 
 
 

@@ -1,12 +1,13 @@
 import re
-import pandas as pd
 from datetime import datetime
 from os import listdir, stat
-from confs import paths
-from structures import  daily_raw_header
 from os.path import isfile, join
-import decimal
-import random
+
+import pandas as pd
+
+from sit.kpimt.confs import paths
+from sit.kpimt.structures import daily_raw_header
+
 
 def get_files(path):
     files= [f for f in listdir(path) if isfile(join(path, f))]

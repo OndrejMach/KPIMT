@@ -23,6 +23,9 @@ class Weekly_input:
 
 
     def process_data(self):
+        def get_input_id(row):
+            row['Input_ID'] = "{}-{}-{}-w".format(row['Region'], row['KPINameWeekly'], row['DatumKPI'])
+            return row
 
         input =self.raw_input[(self.raw_input['Value'].notna())].copy()
         input['DatumKPI'] = input['Date'].map(lambda x: datetime.strptime(str(x),self.datetime_format).strftime("%d.%m.%Y"))
@@ -31,10 +34,12 @@ class Weekly_input:
         input['KPINameWeekly'] = input['KPI name'].map(lambda x: str(x).upper().strip())
         input['Input_File'] = self.filename
         input['Input_File_Time'] = self.filename_timestamp
-        input['Input_ID'] = input.apply(lambda x: "{}-{}-{}-d".format(x['Region'], x['KPINameWeekly'], x['DatumKPI']),axis=1)
+        input['Input_ID'] = None
+        input = input.apply(lambda x: get_input_id(x),axis=1)
         input['KPIValue'] = input['Value'].apply(lambda x: str(x).replace(",","."))
-        input  = input[input['KPIValue'].str.contains("[0-9\.,]", regex=True)]
-        input['KPIValue'] = input['Value'].apply(lambda x: float(x))
+        input  = input[input['KPIValue'].astype(str).str.contains("[0-9\.,]", regex=True)]
+        input['KPIValue'] = input['KPIValue'].apply(lambda x: float(x))
+        input['Value'] = input['KPIValue']
 
         input_raw = input[['Input_ID','DatumKPI', 'KPINameWeekly', 'Region', 'Value','Remarks','Input_File' ]].copy()
         input_raw.rename(columns={'DatumKPI':'Date','KPINameWeekly':'KPI name' }, inplace= True)

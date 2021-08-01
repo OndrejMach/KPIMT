@@ -17,7 +17,8 @@ iso_mapping = {
     "MK":"TMMK",
     "NL":"TMNL",
     "PL":"TMPL",
-    "SK":"TMSK"
+    "SK":"TMSK",
+    "UK" : "NO_NATCO"
 }
 
 def set_requested(row):
@@ -68,7 +69,7 @@ def week_year(date):
 
 def get_key(row, period):
     #applymap('ISO_map',Natco)  & '-' & upper(KPI_ID) & '-' & Date & '-d'  as KEY1;
-    row['KEY1'] = "{}-{}-{}-{}".format(iso_mapping[row['Natco']],str(row['KPI_ID']).upper(), row['Date'], period)
+    row['KEY1'] = "{}-{}-{}-{}".format(row['Natco'],str(row['KPI_ID']).upper(), row['Date'].strftime("%d.%m.%Y"), period)
     return row
 
 def get_lookups(out):
@@ -81,10 +82,14 @@ def get_lookups(out):
     WasCorrectedMAP = out[["Input_ID", "was_corrected_Flag"]].drop_duplicates()
     return [NATVALUEMAP,NATTIMEMAP,NATDELMAP,Input_FileMAP,WasCorrectedMAP]
 
-def all_join(tables):
-    result = reduce(lambda left, right: pd.merge(left, right, on=['Input_ID'], how='outer'), tables)
-    if ('isDelivered' in result.columns):
-        result['isDelivered'].fillna('0')
-    if ('Denominator' in result.columns):
-        result['Denominator'].fillna('0')
-    return result
+def all_join(orig,tables):
+    print("JOINING ORIGINAL TABLE "+str(orig.columns))
+    for i in tables:
+        print("JOINING TABLE: "+str(i.columns))
+        orig = pd.merge(orig,i, on=['Input_ID'], how='left')
+    #result = reduce(lambda left, right: pd.merge(left, right, on=['Input_ID'], how='outer'), tables)
+    if ('isDelivered' in orig.columns):
+        orig['isDelivered'].fillna('0')
+    if ('Denominator' in orig.columns):
+        orig['Denominator'].fillna('0')
+    return orig

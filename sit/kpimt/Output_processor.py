@@ -1,16 +1,16 @@
-from DailyProcessor import DailyProcessor
-from Weekly_input import Weekly_input
-from Weekly_avgs import Weekly_avgs
-from KPIs_reader import KPI_reader
-from functions import get_path, get_files, get_input_data,get_file_timestamp
-from confs import outputs
 import pandas as pd
-import os.path
+
+from sit.kpimt.DailyProcessor import DailyProcessor
+from sit.kpimt.Weekly_input import Weekly_input
+from sit.kpimt.Monthly_input import Monthly_input
+from sit.kpimt.confs import outputs
+from sit.kpimt.functions import get_path, get_files, get_input_data, get_file_timestamp
+import os
 
 
 class Output_processor:
 
-    def run_input_processing(self ,natco, mode, basepath, period, output_path, corrections_path, kpis_path = None):
+    def run_input_processing(self ,natco, mode, basepath, period, output_path, corrections_path):
         path = get_path(basepath, natco, mode)
         files_to_process = get_files(path)
         for input in files_to_process:
@@ -38,10 +38,11 @@ class Output_processor:
                 daily_proc = processor.process_data()
                 daily_proc["output"].to_csv(output_file, sep="|", index=False)
                 daily_proc["corrections"].to_csv(corrections_file, sep="|", index=False)
-
-
-
-           # else:
-           #     processor = MonthlyInputsProcessor(monthly_output=output, raw_input=input_data,
-           #                                        corrections=corrections, natco=natco,
-           #                                        filename=input, timestamp=timestamp_str)
+            else:
+                processor = Monthly_input(monthly_output=output, raw_input=input_data, corrections=corrections,
+                                          natco=natco, filename=input, filename_timestamp=timestamp_str)
+                daily_proc = processor.process_data()
+                daily_proc["output"].to_csv(output_file, sep="|", index=False)
+                daily_proc["corrections"].to_csv(corrections_file, sep="|", index=False)
+            os.remove(path + input)
+            return len(files_to_process)

@@ -1,11 +1,12 @@
 import pandas as pd
 
-from KPIs_reader import KPI_reader
-from Output_processor import Output_processor
-from confs import outputs
+from sit.kpimt.KPIs_reader import KPI_reader
+from sit.kpimt.Output_processor import Output_processor
+from sit.kpimt.confs import outputs
 from os import path
-from MatrixGenerator import MatrixGeneratorDaily
-from Weekly_avgs import Weekly_avgs
+from sit.kpimt.MatrixGenerator import MatrixGeneratorDaily
+from sit.kpimt.Weekly_avgs import Weekly_avgs
+from sit.kpimt.Monthly_avgs import Monthly_avgs
 
 
 
@@ -24,14 +25,15 @@ def run_outputs_processing(natco, mode, params):
     # print(format_date("01/02/1984"))
     proc = Output_processor()
     # print(args.natco)
+    print("running: " +mode)
     if (mode == 'daily_input'):
-        proc.run_input_processing(natco=natco, mode=mode, basepath=params["basepath"], output_path=params['output_path'], corrections_path=params["correnctions_path"],
+        return proc.run_input_processing(natco=natco, mode=mode, basepath=params["basepath"], output_path=params['output_path'], corrections_path=params["correnctions_path"],
                              period="daily")
     elif (mode == 'weekly_input'):
-        proc.run_input_processing(natco=natco, mode=mode, basepath=params["basepath"],  output_path=params['output_path'], corrections_path=params["correnctions_path"],
+        return proc.run_input_processing(natco=natco, mode=mode, basepath=params["basepath"],  output_path=params['output_path'], corrections_path=params["correnctions_path"],
                              period="weekly")
     elif (mode == 'monthly_input'):
-        proc.run_input_processing(natco=natco, mode=mode, basepath=params["basepath"],  output_path=params['output_path'], corrections_path=params["correnctions_path"],
+        return proc.run_input_processing(natco=natco, mode=mode, basepath=params["basepath"],  output_path=params['output_path'], corrections_path=params["correnctions_path"],
                              period="monthly")
 
 
@@ -71,18 +73,19 @@ def run_matrix_processing(natco, params):
         matrix_file = get_matrix_file("monthly")
         data['monthly_matrix'].to_csv(matrix_file, sep="|", index=False)
 
-def run_avg_processing(params, natco):
+def run_avg_processing(params, natco, mode):
     daily_out_file = "{}/{}_daily.csv".format(params['output_path'], natco)
-    weekly_out_file = "{}/{}_weekly.csv".format(params['output_path'], natco)
-    if (path.exists(daily_out_file) and kpis_path is not None and path.exists(weekly_out_file)):
+    out_file = "{}/{}_{}.csv".format(params['output_path'], natco, mode)
+    if (path.exists(daily_out_file) and path.exists(out_file)):
         daily = pd.read_csv(daily_out_file, delimiter='|', header=0, dtype=str)
-        weekly = pd.read_csv(weekly_out_file, delimiter='|', header=0, dtype=str)
+        out_data = pd.read_csv(out_file, delimiter='|', header=0, dtype=str)
         kpis = KPI_reader(params['kpis_path']).read_data()
-        avg_proc = Weekly_avgs(dailyOutput=daily, weeklyOutput=weekly, kpis=kpis )
+
+        avg_proc = Weekly_avgs(dailyOutput=daily, weeklyOutput=out_data, kpis=kpis ) if (mode == 'weekly') else Monthly_avgs(dailyOutput=daily, weeklyOutput=out_data, kpis=kpis )
         result = avg_proc.process_data()
-        avg_file = "{}/{}_weekly_averages_from_daily_input.csv".format(params['output_path'],natco)
+        avg_file = "{}/{}_{}_averages_from_daily_input.csv".format(params['output_path'],natco, mode)
         result['averages'].to_csv(avg_file, sep="|", index=False)
-        result['weekly_out'].to_csv(weekly_out_file, sep="|", index=False)
+        result['out'].to_csv(out_file, sep="|", index=False)
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
