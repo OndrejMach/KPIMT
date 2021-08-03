@@ -56,7 +56,8 @@ class DailyProcessor:
         input['Input_ID'] = None
         input = input.apply(lambda x: get_input_id(x), axis=1)
         input['KPIValue'] = input['Value'].apply(lambda x: str(x).replace(",", "."))
-        input = input[input['KPIValue'].astype(str).str.contains("[0-9\.,]", regex=True)]
+        input['num_values'] = input['KPIValue'].astype(str).str.contains("[a-zA-Z]", regex=True)
+        input = input[input['KPIValue'].astype(str).str.contains("[0-9\.,]", regex=True) & (input['num_values'] != True)]
         input['KPIValue'] = input['KPIValue'].apply(lambda x: float(x))
         input['Value'] = input['KPIValue']
         print("INPUT DATA ROW COUNT: "+str(input.shape[0]))

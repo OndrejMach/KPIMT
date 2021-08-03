@@ -3,7 +3,7 @@ import pandas as pd
 from sit.kpimt.DailyProcessor import DailyProcessor
 from sit.kpimt.Weekly_input import Weekly_input
 from sit.kpimt.Monthly_input import Monthly_input
-from sit.kpimt.confs import outputs
+from sit.kpimt.confs import outputs, daily_datetime_format, weekly_datetime_format, monthly_datetime_format
 from sit.kpimt.functions import get_path, get_files, get_input_data, get_file_timestamp
 import os
 
@@ -26,7 +26,7 @@ class Output_processor:
             if (period == 'daily'):
                 processor = DailyProcessor(daily_output=output, daily_input=input_data,
                                            corrections_file=corrections, natco=natco,
-                                           filename=input, filename_timestamp=timestamp_str)
+                                           filename=input, filename_timestamp=timestamp_str, datetime_format=daily_datetime_format[natco])
                 daily_proc = processor.process_data()
                 daily_proc["output"].to_csv(output_file, sep="|", index=False)
                 daily_proc["corrections"].to_csv(corrections_file, sep="|", index=False)
@@ -34,13 +34,13 @@ class Output_processor:
             elif (period == 'weekly'):
 
                 processor = Weekly_input(weekly_output=output, raw_input=input_data, corrections=corrections,
-                                         natco=natco, filename=input, filename_timestamp=timestamp_str)
+                                         natco=natco, filename=input, filename_timestamp=timestamp_str, datetime_format=weekly_datetime_format[natco])
                 daily_proc = processor.process_data()
                 daily_proc["output"].to_csv(output_file, sep="|", index=False)
                 daily_proc["corrections"].to_csv(corrections_file, sep="|", index=False)
             else:
                 processor = Monthly_input(monthly_output=output, raw_input=input_data, corrections=corrections,
-                                          natco=natco, filename=input, filename_timestamp=timestamp_str)
+                                          natco=natco, filename=input, filename_timestamp=timestamp_str, datetime_format=monthly_datetime_format[natco])
                 daily_proc = processor.process_data()
                 daily_proc["output"].to_csv(output_file, sep="|", index=False)
                 daily_proc["corrections"].to_csv(corrections_file, sep="|", index=False)
