@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
+import re
 
 class Monthly_avgs:
     kpis=None
@@ -18,11 +19,14 @@ class Monthly_avgs:
                 row['EDWH_KPI_Name'] = '*nonamefor_'+str(row['KPI_ID']).upper()
             return row
 
-        def get_month_start():
-            today = datetime.today()
-            ret = today.strftime("01.%m.%Y")
-            print("MONTHLY DATE: " + ret)
-            return ret
+        def get_month_start(date):
+            if (re.match("\d{2}\.\d{2}\.\d{4}", date)):
+                today = datetime.strptime(date, '%d.%m.%Y')
+                ret = today.strftime("01.%m.%Y")
+            #print("MONTHLY DATE: " + ret)
+                return ret
+            else:
+                return None
         def get_input_id(row):
             row['Input_ID'] = "{}-{}-{}-m".format(row['Region'], row['KPI name'], row['Date'])
             return row
@@ -32,7 +36,7 @@ class Monthly_avgs:
 
 
         daily_output = self.dailyOutput.copy()
-        daily_output['Date'] = get_month_start()
+        daily_output['Date'] = daily_output['Date'].apply(lambda x: get_month_start(str(x)))
         daily_output['KPI_ID'] = daily_output['KPI_ID'].apply(lambda x: str(x).upper())
         avg_tmp = pd.merge(daily_output,kpis_map,on="KPI_ID",how="left")
         avg_tmp = avg_tmp.apply(lambda x: fix_null(x), axis=1)

@@ -1,3 +1,5 @@
+import re
+
 import pandas as pd
 from datetime import datetime
 import time
@@ -12,7 +14,7 @@ class Weekly_input:
     datetime_format = '%Y-%m-%d %H:%M:%S'
 
 
-    def __init__(self, weekly_output,raw_input, corrections, natco, filename, filename_timestamp, datetime_format = '%Y-%m-%d %H:%M:%S'):
+    def __init__(self, weekly_output,raw_input, corrections, natco, filename, filename_timestamp, datetime_format = '%d.%m.%Y'):
         self.weekly_output=weekly_output
         self.raw_input=raw_input
         self.corrections=corrections

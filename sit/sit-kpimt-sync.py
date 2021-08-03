@@ -68,8 +68,8 @@ def handle_multimarket():
     qv_path = "/multi_market/monthly_input/"
     if (sftp_out.set_chdir(qv_path)):
         sftp_out.upload(local_folder=local_path)
-    #if (sftp_in.set_chdir(remote_path)):
-        #sftp_in.delete()
+    if (sftp_in.set_chdir(remote_path)):
+        sftp_in.delete()
     sftp_in.close()
     sftp_out.close()
 
@@ -83,8 +83,8 @@ def handle_ims():
     qv_path = "/IMS/Performance_Data/"
     if (sftp_out.set_chdir(qv_path)):
         sftp_out.upload(local_folder=local_path)
-    # if (sftp_in.set_chdir(remote_path)):
-        # sftp_in.delete()
+    if (sftp_in.set_chdir(remote_path)):
+        sftp_in.delete()
     sftp_in.close()
     sftp_out.close()
 
@@ -98,8 +98,8 @@ def handle_kpi_request():
     qv_path = "/KPIRequest/"
     if(sftp_out.set_chdir(qv_path)):
         sftp_out.upload(local_folder=local_path)
-    # if (sftp_in.set_chdir(remote_path)):
-        # sftp_in.delete()
+    if (sftp_in.set_chdir(remote_path)):
+        sftp_in.delete()
     sftp_in.close()
     sftp_out.close()
 
@@ -165,11 +165,11 @@ download_files = KerberosPythonOperator(
         dag=dag
     )
 
-#delete_files = KerberosPythonOperator(
-#    task_id='delete_files_sftp',
-#    python_callable=delete_files_sftp,
-#    dag=dag,
-#)
+delete_files = KerberosPythonOperator(
+    task_id='delete_files_sftp',
+    python_callable=delete_files_sftp,
+    dag=dag,
+)
 
 multi_market = KerberosPythonOperator(
     task_id='handle_multimarket',
@@ -189,4 +189,4 @@ kpi_requests = KerberosPythonOperator(
     dag=dag,
 )
 
-download_files >> deliver_files >> multi_market >> ims >> kpi_requests #'delete_files' shoule be added
+download_files >> deliver_files >> delete_files >>multi_market >> ims >> kpi_requests #'delete_files' shoule be added

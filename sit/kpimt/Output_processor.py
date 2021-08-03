@@ -45,4 +45,4 @@ class Output_processor:
                 daily_proc["output"].to_csv(output_file, sep="|", index=False)
                 daily_proc["corrections"].to_csv(corrections_file, sep="|", index=False)
             os.remove(path + input)
-            return len(files_to_process)
+        return len(files_to_process)

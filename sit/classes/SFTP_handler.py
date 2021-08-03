@@ -53,13 +53,13 @@ class SFTP_handler:
 
     def upload(self, local_folder):
         for item in os.listdir(local_folder):
-            if os.path.isfile(os.path.join(local_folder, item)):
+            if (os.path.isfile(os.path.join(local_folder, item)) and (not os.path.isdir(os.path.join(local_folder, item)))):
                 print("uploading file "+item +" from " + local_folder)
                 self.conn.put(os.path.join(local_folder, item))
 
     def get(self,local_path):
         for entry in self.conn.listdir():
-            print("downloading file " + entry + " from " + local_path)
+            print("downloading file " + entry + " to " + local_path)
             self.conn.get(remotepath=entry, localpath=local_path+entry)
 
     def delete(self):

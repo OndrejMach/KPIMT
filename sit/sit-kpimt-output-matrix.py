@@ -2,6 +2,7 @@ from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from kerberos_python_operator import KerberosPythonOperator
 from datetime import datetime
+from sit.classes.SFTP_handler import SFTP_handler
 
 from sit.kpimt.run_processing import run_outputs_processing, run_avg_processing, run_matrix_processing
 
@@ -33,10 +34,14 @@ params = {
     "archive_path_input": "/data_ext/apps/sit/kpimt/archive/input/"
 }
 
+qs_server_ip='10.105.180.206'
+qs_server_user='cdrs'
+qs_server_folder='/IntKPIMonitoring'
+cdrs_sftp_key='/home/talend_ewhr/.ssh/id_rsa'
 
 
 natco_list=["COSGRE", "COSROM", "TMA", "TMCG", "TMCZ", "TMD", "TMHR", "TMHU", "TMMK", "TMNL", "TMPL", "TMSK"]
-
+sftp_out = SFTP_handler(host=qs_server_ip,private_key=cdrs_sftp_key ,chdir=qs_server_folder,username=qs_server_user)
 #tmpFile = sftp_in.getTmpFile(app_tmp)
 timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
 
@@ -61,9 +66,28 @@ def run_processing():
             print("NO INPUT FILES TO PROCESS, SKIPPING NATCO: " + natco)
 
 
+def upload_qs():
+    sftp_out.connect()
+    local_path = params['output_path']
+    matrix_path = local_path + "Matrix/"
+    kpis_path = params['kpis_path']
+    corrections_path = params['correnctions_path']
+    sftp_out.upload(local_folder=local_path)
+    sftp_out.upload(local_folder=matrix_path)
+    sftp_out.upload(local_folder=kpis_path)
+    sftp_out.upload(local_folder=corrections_path)
+    sftp_out.close()
+
+
 process_files = KerberosPythonOperator(
         task_id='process_files',
         python_callable=run_processing,
+        dag=dag
+    )
+
+upload_results = KerberosPythonOperator(
+        task_id='upload_results',
+        python_callable=upload_qs,
         dag=dag
     )
 
@@ -71,4 +95,4 @@ input_archive = BashOperator(task_id='archive_input', bash_command=input_backup,
 output_archive = BashOperator(task_id='archive_output', bash_command=backup_command, dag=dag)
 
 
-input_archive >> output_archive >> process_files
+input_archive >> output_archive >> process_files >> upload_results

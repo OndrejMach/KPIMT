@@ -123,6 +123,7 @@ class MatrixGeneratorDaily:
             print("AFTER JOINS:  ")
             print(result_daily.info())
             print(result_daily.info)
+            result_daily.rename(columns={'Input_ID': 'KEY1'}, inplace=True)
         # weekly_out = pd.read_csv("/Users/ondrejmachacek/tmp/KPI/outs/TMA_daily_13-7-2021.csv", delimiter='|',
         #                        header=0).rename(columns={"Date": "Time"})
         if (self.weekly_output is not None):
@@ -136,6 +137,7 @@ class MatrixGeneratorDaily:
             matrix_week_enriched.rename(columns={'KEY1': 'Input_ID'}, inplace=True)
             to_join =  get_lookups(weekly_out) + [RemarksMAP]
             result_weekly = all_join(matrix_week_enriched,to_join)
+            result_weekly.rename(columns={'Input_ID': 'KEY1'}, inplace=True)
 
         if (self.monthly_output is not None):
             monthly_out = self.monthly_output.rename(columns={
@@ -151,5 +153,6 @@ class MatrixGeneratorDaily:
             to_join =  get_lookups(monthly_out) + [
                 RemarksMAP]
             result_monthly = all_join(matrix_month_enriched,to_join)
+            result_monthly.rename(columns={'Input_ID': 'KEY1'}, inplace=True)
 
         return {"daily_matrix": result_daily, "weekly_matrix": result_weekly, "monthly_matrix": result_monthly}

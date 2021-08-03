@@ -81,7 +81,7 @@ def run_avg_processing(params, natco, mode):
         out_data = pd.read_csv(out_file, delimiter='|', header=0, dtype=str)
         kpis = KPI_reader(params['kpis_path']).read_data()
 
-        avg_proc = Weekly_avgs(dailyOutput=daily, weeklyOutput=out_data, kpis=kpis ) if (mode == 'weekly') else Monthly_avgs(dailyOutput=daily, weeklyOutput=out_data, kpis=kpis )
+        avg_proc = Weekly_avgs(dailyOutput=daily, weeklyOutput=out_data, kpis=kpis ) if (mode == 'weekly') else Monthly_avgs(dailyOutput=daily, monthlyOutput=out_data, kpis=kpis )
         result = avg_proc.process_data()
         avg_file = "{}/{}_{}_averages_from_daily_input.csv".format(params['output_path'],natco, mode)
         result['averages'].to_csv(avg_file, sep="|", index=False)

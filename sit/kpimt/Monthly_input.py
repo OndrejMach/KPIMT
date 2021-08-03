@@ -12,7 +12,7 @@ class Monthly_input:
     datetime_format = '%Y-%m-%d %H:%M:%S'
 
 
-    def __init__(self, monthly_output, raw_input, corrections, natco, filename, filename_timestamp, datetime_format ='%Y-%m-%d %H:%M:%S'):
+    def __init__(self, monthly_output, raw_input, corrections, natco, filename, filename_timestamp, datetime_format ='%d.%m.%Y'):
         self.monthly_output=monthly_output
         self.raw_input=raw_input
         self.corrections=corrections
