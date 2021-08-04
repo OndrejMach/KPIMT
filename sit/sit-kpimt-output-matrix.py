@@ -4,7 +4,7 @@ from kerberos_python_operator import KerberosPythonOperator
 from datetime import datetime
 from sit.classes.SFTP_handler import SFTP_handler
 
-from sit.kpimt.run_processing import run_outputs_processing, run_avg_processing, run_matrix_processing
+from sit.kpimt.run_processing import run_outputs_processing, run_avg_processing, run_matrix_processing, run_multimarket
 
 #from sit.classes.SFTP_handler import SFTP_handler
 
@@ -31,7 +31,9 @@ params = {
     'basepath': "/data_ext/apps/sit/kpimt/input/",
     "output_path": "/data_ext/apps/sit/kpimt/output/",
     "archive_path_output": "/data_ext/apps/sit/kpimt/archive/output/",
-    "archive_path_input": "/data_ext/apps/sit/kpimt/archive/input/"
+    "archive_path_input": "/data_ext/apps/sit/kpimt/archive/input/",
+    'multimarket': "/data_ext/apps/sit/kpimt/input/multi_market/",
+    'multimarket_archive': "/data_ext/apps/sit/kpimt/archive/input/multi_market/"
 }
 
 qs_server_ip='10.105.180.206'
@@ -64,6 +66,8 @@ def run_processing():
             run_matrix_processing(natco=natco, params=params)
         else:
             print("NO INPUT FILES TO PROCESS, SKIPPING NATCO: " + natco)
+def multimarket_processing():
+    run_multimarket(params=params)
 
 
 def upload_qs():
@@ -85,6 +89,12 @@ process_files = KerberosPythonOperator(
         dag=dag
     )
 
+process_multimarket = KerberosPythonOperator(
+        task_id='process_multimarket',
+        python_callable=multimarket_processing,
+        dag=dag
+    )
+
 upload_results = KerberosPythonOperator(
         task_id='upload_results',
         python_callable=upload_qs,
@@ -95,4 +105,4 @@ input_archive = BashOperator(task_id='archive_input', bash_command=input_backup,
 output_archive = BashOperator(task_id='archive_output', bash_command=backup_command, dag=dag)
 
 
-input_archive >> output_archive >> process_files >> upload_results
+input_archive >> output_archive >> process_files >> process_multimarket >> upload_results

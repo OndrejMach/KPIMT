@@ -1,5 +1,6 @@
 import time
 from datetime import datetime
+from sit.kpimt.confs import output_schema, corections_schema, output_daily_schema
 
 import numpy as np
 import pandas as pd
@@ -111,7 +112,7 @@ class DailyProcessor:
         #Update_Corr = Update_Corr[['Key_Corr','DatumKPI','KPINameQVD','Natco','KPIValueOld','KPIValueNew','KPIValueCompare','CommentRowOld','CommentRowNew','CommentFileOld','CommentFileCompare','TimestampCorrFile','FileOld','FileNew','Granularity']]
         Update_Corr = Update_Corr[Update_Corr['KPIValueNew'] != Update_Corr['KPIValueCompare']]
         Update_Corr = Update_Corr[corr.columns]
-        correction_result = pd.concat([corr,Update_Corr])
+        correction_result = pd.concat([corr,Update_Corr])[corections_schema]
 
         print("NEW CORRECTION FILE ROW COUNT: "+str(correction_result.shape[0]))
         correction_map = correction_result.copy()
@@ -134,7 +135,7 @@ class DailyProcessor:
 
         output_filtered=output_filtered[['Input_ID','Date','TimestampTo','Region','SourceSystem','KPI_ID','Denominator','Numerator','Value','Input_File','was_corrected_Flag']]
 
-        output = pd.concat([result_update,output_filtered])
+        output = pd.concat([result_update,output_filtered])[output_daily_schema]
         print("OUTPUT COUNT: "+str(output.shape[0]))
         return {"output": output, "corrections": correction_result}
 

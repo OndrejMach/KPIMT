@@ -1,5 +1,7 @@
-import pandas as pd
+import os
 
+import pandas as pd
+from glob import  glob
 from sit.kpimt.KPIs_reader import KPI_reader
 from sit.kpimt.Output_processor import Output_processor
 from sit.kpimt.confs import outputs
@@ -7,6 +9,10 @@ from os import path
 from sit.kpimt.MatrixGenerator import MatrixGeneratorDaily
 from sit.kpimt.Weekly_avgs import Weekly_avgs
 from sit.kpimt.Monthly_avgs import Monthly_avgs
+from sit.kpimt.Multimarket import Multimarket
+from sit.kpimt.functions import get_file_timestamp
+from datetime import  datetime
+
 
 
 
@@ -14,7 +20,9 @@ params = {
     "kpis_path": "/Users/ondrejmachacek/tmp/KPI/kpi_request/",
     "correnctions_path": "/Users/ondrejmachacek/tmp/KPI/correction/",
     'basepath': "/Users/ondrejmachacek/tmp/KPI/input",
-    "output_path": "/Users/ondrejmachacek/tmp/KPI/output/"
+    "output_path": "/Users/ondrejmachacek/tmp/KPI/output/",
+    'multimarket': "/Users/ondrejmachacek/tmp/KPI/multimarket/",
+    'multimarket_archive': "/Users/ondrejmachacek/tmp/KPI/multimarket/"
 }
 
 
@@ -87,11 +95,41 @@ def run_avg_processing(params, natco, mode):
         result['averages'].to_csv(avg_file, sep="|", index=False)
         result['out'].to_csv(out_file, sep="|", index=False)
 
+def run_multimarket(params):
+    print("STARTING MULTIMARKET PROCESSING")
+    multimarket_natcos = ["TMA","TMCZ","TMHR","COSROM"]
+    all_files = glob(params['output_path'] + "/*monthly.csv")
+    li = []
+    for filename in all_files:
+        print("READING INPUT "+filename)
+        df = pd.read_csv(filename,delimiter='|', header=0, dtype=str)
+        li.append(df)
+    all_monthly = pd.concat(li, axis=0, ignore_index=True)
+    multimarket_files= glob(params['multimarket'] + "/*.xlsx")
+    corrections = pd.read_csv(params['correnctions_path']+"/Corrections.csv", delimiter='|', header=0, dtype=str)
+    for filename in multimarket_files:
+        print("PROCESSING FILENAME "+filename)
+        multimarket_input_data = pd.read_excel(filename, header=0)
+        data = Multimarket(multimarket_in=multimarket_input_data, corrections=corrections, all_monthly=all_monthly,filename=path.basename(filename), filetime= get_file_timestamp(filename)).process_data()
+        print("WRITING CORRECTIONS FILE TO: "+params['correnctions_path']+"/Corrections.csv")
+        data['corrections'].to_csv(params['correnctions_path']+"/Corrections.csv", sep="|", index=False)
+        for natco in multimarket_natcos:
+            print("WRITING OUTPUT FILE FOR "+natco+"  TO: " + params['output_path']+"/"+natco+"_monthly.csv")
+            data[natco].to_csv(params['output_path']+"/"+natco+"_monthly.csv", sep="|", index=False)
+        os.rename(filename, params['multimarket_archive']+"/"+path.basename(filename)+"_"+datetime.now().strftime('%Y%m%d%H%M%S'))
+
+
+
+
+
+
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    run_outputs_processing("COSGRE", 'weekly_input', params)
+    #run_outputs_processing("COSGRE", 'weekly_input', params)
     #kpis = KPI_reader(params['kpis_path']).read_data()
     #run_matrix_processing("TMA", params)
+    run_multimarket(params)
 
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

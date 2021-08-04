@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import date, timedelta
 from sit.kpimt.matrixFunctions import check_year, check_last_year, check_last_ytd, set_requested, week_year, get_key, \
     get_lookups, all_join, iso_mapping
+from sit.kpimt.confs import matrix_schema_daily,matrix_schema_weekly, matrix_schema_monthly
 
 
 class MatrixGeneratorDaily:
@@ -75,9 +76,9 @@ class MatrixGeneratorDaily:
         matrix_month = pd.merge(kpi_database[['Natco', 'KPI_ID', 'KPI_Name', 'requested_Monthly', 'tmp']],
                                 calendar_month[['Date', 'tmp']], on=['tmp'])
         matrix_week = pd.merge(kpi_database[['Natco', 'KPI_ID', 'KPI_Name', 'requested_Weekly', 'tmp']],
-            calendar_week[['Date', 'tmp']],on=['tmp'])
+            calendar_week[['Date','tmp']],on=['tmp'])
         matrix_day = pd.merge(kpi_database[['Natco', 'KPI_ID', 'KPI_Name', 'requested_Daily', 'tmp']],
-            calendar_day[['Date', 'tmp']], on=['tmp'])
+            calendar_day, on=['tmp'])
         matrix_month.drop(columns=['tmp'], inplace=True)
         matrix_week.drop(columns=['tmp'], inplace=True)
         matrix_day.drop(columns=['tmp'], inplace=True)
@@ -91,6 +92,7 @@ class MatrixGeneratorDaily:
         result_weekly = None
         result_monthly = None
         if (self.daily_output is not None):
+            print("CALCULATING DAILY MATRIX")
             daily_out = self.daily_output.rename(columns={"Date": "Time"})
             print("DAILY_OUTPUT :")
             print(daily_out.info())
@@ -111,7 +113,7 @@ class MatrixGeneratorDaily:
             matrix_day['KEY1'] = None
             matrix_day_enriched = matrix_day.apply(lambda row: get_key(row, 'd'),axis=1)
             #matrix_day_enriched = matrix_day_enriched[matrix_day_enriched['Natco'] == self.natCo]
-            matrix_day_enriched.rename(columns={'KEY1': 'Input_ID'}, inplace=True)
+            matrix_day_enriched.rename(columns={'KEY1': 'Input_ID', }, inplace=True)
             print("BEFORE JOINS: ")
             print(matrix_day_enriched.info())
             print(matrix_day_enriched.info)
@@ -123,10 +125,13 @@ class MatrixGeneratorDaily:
             print("AFTER JOINS:  ")
             print(result_daily.info())
             print(result_daily.info)
-            result_daily.rename(columns={'Input_ID': 'KEY1'}, inplace=True)
+            result_daily.rename(columns={'Input_ID': 'KEY1', 'Value': 'KPI_Value', "isDelivered":"IsDelivered"}, inplace=True)
+
+            result_daily = result_daily[matrix_schema_daily]
         # weekly_out = pd.read_csv("/Users/ondrejmachacek/tmp/KPI/outs/TMA_daily_13-7-2021.csv", delimiter='|',
         #                        header=0).rename(columns={"Date": "Time"})
         if (self.weekly_output is not None):
+            print("CALCULATING WEEKLY MATRIX")
             weekly_out = self.weekly_output.rename(columns={"Date": "Time"})
             RemarksMAP = weekly_out[["Input_ID", "Remarks"]].drop_duplicates()
 
@@ -137,9 +142,11 @@ class MatrixGeneratorDaily:
             matrix_week_enriched.rename(columns={'KEY1': 'Input_ID'}, inplace=True)
             to_join =  get_lookups(weekly_out) + [RemarksMAP]
             result_weekly = all_join(matrix_week_enriched,to_join)
-            result_weekly.rename(columns={'Input_ID': 'KEY1'}, inplace=True)
+            result_weekly.rename(columns={'Input_ID': 'KEY1','Value': 'KPI_Value', "isDelivered":"IsDelivered"}, inplace=True)
+            result_weekly = result_weekly[matrix_schema_weekly]
 
         if (self.monthly_output is not None):
+            print("CALCULATING MONTHLY MATRIX")
             monthly_out = self.monthly_output.rename(columns={
                 "Date": "Time"})  # pd.read_csv("/Users/ondrejmachacek/tmp/KPI/outs/TMA_daily_13-7-2021.csv", delimiter='|',
             #           header=0).rename(columns={"Date": "Time"})
@@ -153,6 +160,8 @@ class MatrixGeneratorDaily:
             to_join =  get_lookups(monthly_out) + [
                 RemarksMAP]
             result_monthly = all_join(matrix_month_enriched,to_join)
-            result_monthly.rename(columns={'Input_ID': 'KEY1'}, inplace=True)
+            result_monthly.rename(columns={'Input_ID': 'KEY1','Value': 'KPI_Value', "isDelivered": "IsDelivered"}, inplace=True)
+            result_monthly = result_monthly[matrix_schema_monthly]
+
 
         return {"daily_matrix": result_daily, "weekly_matrix": result_weekly, "monthly_matrix": result_monthly}

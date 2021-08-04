@@ -1,5 +1,5 @@
 import re
-
+from sit.kpimt.confs import output_schema, corections_schema
 import pandas as pd
 from datetime import datetime
 import time
@@ -94,7 +94,7 @@ class Weekly_input:
         print(weekly_corr_result.columns)
         print("WEEKLY ENRICHED COUNT: " + str(weekly_corr_result.shape[0]))
         print(weekly_corr_result.info)
-        corrections_result = pd.concat([self.corrections, weekly_corr_result])
+        corrections_result = pd.concat([self.corrections, weekly_corr_result])[corections_schema]
 
 
         corrections_map = corrections_result[corrections_result['Granularity'] == 'W'][['Key_Corr']].drop_duplicates()
@@ -117,7 +117,7 @@ class Weekly_input:
         print("WEEKLY OUTPUT FILTERED COUNT: " + str(output_filtered.shape[0]))
         print(output_filtered.info)
 
-        output_result = pd.concat([output_update,output_filtered])
+        output_result = pd.concat([output_update,output_filtered])[output_schema]
 
         return {"output": output_result, "corrections": corrections_result}
 
