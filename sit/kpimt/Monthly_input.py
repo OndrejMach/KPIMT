@@ -52,13 +52,13 @@ class Monthly_input:
 
         print(input.columns)
         print("INPUT COUNT: " + str(input.shape[0]))
-        print(input.info)
+        print(input.info())
 
         monthly_output = self.monthly_output[self.monthly_output['Input_ID'].notna()][['Input_ID', 'Value', 'Remarks', 'Input_File']].copy()
         monthly_output.rename(columns = {'Value':'KPIValueOld'}, inplace=True)
         print(monthly_output.columns)
         print("INPUT COUNT: " + str(monthly_output.shape[0]))
-        print(monthly_output.info)
+        print(monthly_output.info())
 
         value_map = monthly_output[['Input_ID', 'KPIValueOld']].drop_duplicates()
         input_file_map = monthly_output[['Input_ID', 'Input_File']].drop_duplicates()
@@ -83,7 +83,7 @@ class Monthly_input:
 
         print(monthly2.columns)
         print("MONTHLY ENRICHED COUNT: " + str(monthly2.shape[0]))
-        print(monthly2.info)
+        print(monthly2.info())
 
         monthly2 = monthly2[
             (monthly2["KPIValueNew"] != monthly2["KPIValue_Compare"]) | ((monthly2["Comments_check"] != True))]
@@ -92,7 +92,7 @@ class Monthly_input:
         weekly_corr_result = monthly2[self.corrections.columns]
         print(weekly_corr_result.columns)
         print("MONTHLY ENRICHED COUNT: " + str(weekly_corr_result.shape[0]))
-        print(weekly_corr_result.info)
+        print(weekly_corr_result.info())
         corrections_result = pd.concat([self.corrections, weekly_corr_result])[corections_schema]
 
 
@@ -101,7 +101,7 @@ class Monthly_input:
         corrections_map.rename(columns={'Key_Corr':'Input_ID'}, inplace=True)
         print(corrections_map.columns)
         print("MONTHLY ENRICHED COUNT: " + str(corrections_map.shape[0]))
-        print(corrections_map.info)
+        print(corrections_map.info())
 
         output_update = pd.merge(input_raw,corrections_map, on='Input_ID', how='left')
         output_update_ids = output_update[['Input_ID']].drop_duplicates()
@@ -114,7 +114,7 @@ class Monthly_input:
         output_filtered = output_filtered[self.monthly_output.columns]
         print(output_filtered.columns)
         print("MONTHLY OUTPUT FILTERED COUNT: " + str(output_filtered.shape[0]))
-        print(output_filtered.info)
+        print(output_filtered.info())
 
         output_result = pd.concat([output_update,output_filtered])[output_schema]
 

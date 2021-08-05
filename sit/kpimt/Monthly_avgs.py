@@ -59,7 +59,7 @@ class Monthly_avgs:
         averages = averages[["Input_ID","Date",'KPI name',"Region","Value","Remarks","Input_File","was_corrected_Flag"]]
         print(averages.columns)
         print("AGGREGATES COUNT: "+str(averages.shape[0]))
-        print(averages.info)
+        print(averages.info())
 
         data0 = self.monthlyOutput[self.monthlyOutput['Input_File'] != 'calculation'].copy()
         data0 = data0[['Input_ID']].drop_duplicates()
@@ -80,7 +80,7 @@ class Monthly_avgs:
 
         print(result.columns)
         print("MONTHLY OUT COUNT: " + str(result.shape[0]))
-        print(result.info)
+        print(result.info())
 
         return {'averages': averages, 'out' : result}
 

@@ -19,7 +19,7 @@ class Output_processor:
             corrections_file = '{}/{}'.format(corrections_path, "Corrections.csv")
             corrections = pd.read_csv(corrections_file, delimiter='|', header=0, dtype=str)
             input_data = get_input_data(path + input)
-            # print(input_data.info)
+            print(input_data.info())
             output = pd.read_csv(output_file, delimiter='|', header=0, dtype=str)
             timestamp_str = get_file_timestamp(path + input)
             print(timestamp_str)

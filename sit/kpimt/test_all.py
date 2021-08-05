@@ -20,7 +20,7 @@ output_weekly = pd.read_csv("/Users/ondrejmachacek/tmp/KPI/output/TMPL_weekly.cs
 print(output_weekly.columns)
 
 matrix = MatrixGeneratorDaily(kpis=kpis, daily_output=input_daily, weekly_output=output_weekly, monthly_output=None, natCo="TMPL").processing()
-print(matrix['daily_matrix'].info)
+print(matrix['daily_matrix'].info())
 
 matrix['daily_matrix'].to_csv("/Users/ondrejmachacek/tmp/KPI/output/TMPL_test.csv", sep="|", header=True)
 

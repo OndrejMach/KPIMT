@@ -58,6 +58,9 @@ class Multimarket:
         input['Input_ID'] = None
         input = input.apply(lambda row: get_input_id(row), axis = 1)
         input = input[['Input_ID','DatumKPI', 'KPINameMonthly', 'Region', 'KPIValue', 'Remarks', 'Input_File', 'Input_File_Time' ]]
+        print("INPUT INFO:")
+        print(input.info())
+
         input_corr = input.copy()
         input_corr['KPIValueNew'] = input_corr['KPIValue']
 
@@ -96,6 +99,9 @@ class Multimarket:
         update_corr['correction_timestamp'] = time.time()
         update_corr = update_corr[corections_schema]
 
+        print("UPDATE CORRECTIONS:")
+        print(update_corr.info())
+
         corr = self.corrections[corections_schema]
 
         result_corrections = pd.concat([corr, update_corr])[corections_schema]
@@ -112,6 +118,8 @@ class Multimarket:
         all_monthly_filtered = pd.merge(all_monthly,monthly_filter, on=['Input_ID'], how="left" )
         all_monthly_filtered = all_monthly_filtered[all_monthly_filtered['exists_in_monthly'].isnull() | all_monthly_filtered['exists_in_monthly'].isna()]
         monthly2 = pd.concat([monthly2, all_monthly_filtered])[output_schema]
+        print("OVERALL RESULT:")
+        print(monthly2.info())
 
         return {"corrections": result_corrections,
                 "TMA" : monthly2[monthly2['Region'] == 'TMA'],

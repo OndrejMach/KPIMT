@@ -42,7 +42,7 @@ class MatrixGeneratorDaily:
         kpi_database = kpi_database[kpi_database['Natco'] == self.natCo].copy()
         print("CROSS_TAB INFO:")
         print(kpi_database.info())
-        print(kpi_database.info)
+        #print(kpi_database.info)
 
         sdate = date(2014, 1, 1)  # start date
         edate = date.today()
@@ -62,7 +62,7 @@ class MatrixGeneratorDaily:
         calendar_day['WeekDay'] = calendar_day['Date'].dt.dayofweek
         print("CALEANDAR INFO:")
         print(calendar_day.info())
-        print(calendar_day.info)
+        #print(calendar_day.info)
 
 
         calendar_week = calendar_day[calendar_day['WeekDay'] == 0].copy()
@@ -84,7 +84,7 @@ class MatrixGeneratorDaily:
         matrix_day.drop(columns=['tmp'], inplace=True)
         print("JOIN WITH CALENDAR DONE")
         print(matrix_day.info())
-        print(matrix_day.info)
+        #print(matrix_day.info)
 
         # daily_out = pd.read_csv("/Users/ondrejmachacek/tmp/KPI/outs/TMA_daily_13-7-2021.csv", delimiter='|',
         #      header=0).rename(columns={"Date": "Time"})
@@ -96,19 +96,19 @@ class MatrixGeneratorDaily:
             daily_out = self.daily_output.rename(columns={"Date": "Time"})
             print("DAILY_OUTPUT :")
             print(daily_out.info())
-            print(daily_out.info)
+            #print(daily_out.info)
             DenominatorMAP = daily_out[["Input_ID", "Denominator"]].drop_duplicates()
             NumeratorMAP = daily_out[["Input_ID", "Numerator"]].drop_duplicates()
             SourceSystemMAP = daily_out[["Input_ID", "SourceSystem"]].drop_duplicates()
             print("DenominatorMAP :")
             print(DenominatorMAP.info())
-            print(DenominatorMAP.info)
+            #print(DenominatorMAP.info)
             print("NumeratorMAP :")
             print(NumeratorMAP.info())
-            print(NumeratorMAP.info)
+            #print(NumeratorMAP.info)
             print("SourceSystemMAP :")
             print(SourceSystemMAP.info())
-            print(SourceSystemMAP.info)
+            #print(SourceSystemMAP.info)
 
             matrix_day['KEY1'] = None
             matrix_day_enriched = matrix_day.apply(lambda row: get_key(row, 'd'),axis=1)
@@ -116,7 +116,7 @@ class MatrixGeneratorDaily:
             matrix_day_enriched.rename(columns={'KEY1': 'Input_ID', }, inplace=True)
             print("BEFORE JOINS: ")
             print(matrix_day_enriched.info())
-            print(matrix_day_enriched.info)
+            #print(matrix_day_enriched.info)
             to_join =  get_lookups(daily_out) + [
                 DenominatorMAP,
                 NumeratorMAP,
@@ -124,7 +124,7 @@ class MatrixGeneratorDaily:
             result_daily = all_join(matrix_day_enriched,to_join)
             print("AFTER JOINS:  ")
             print(result_daily.info())
-            print(result_daily.info)
+            #print(result_daily.info)
             result_daily.rename(columns={'Input_ID': 'KEY1', 'Value': 'KPI_Value', "isDelivered":"IsDelivered"}, inplace=True)
 
             result_daily = result_daily[matrix_schema_daily]
