@@ -4,7 +4,7 @@ from kerberos_python_operator import KerberosPythonOperator
 from datetime import datetime
 from sit.classes.SFTP_handler import SFTP_handler
 
-from sit.kpimt.run_processing import run_outputs_processing, run_avg_processing, run_matrix_processing, run_multimarket
+from sit.kpimt.run_processing import run_outputs_processing, run_avg_processing, run_matrix_processing, run_multimarket, run_ims
 
 #from sit.classes.SFTP_handler import SFTP_handler
 
@@ -33,8 +33,21 @@ params = {
     "archive_path_output": "/data_ext/apps/sit/kpimt/archive/output/",
     "archive_path_input": "/data_ext/apps/sit/kpimt/archive/input/",
     'multimarket': "/data_ext/apps/sit/kpimt/input/multi_market/",
-    'multimarket_archive': "/data_ext/apps/sit/kpimt/archive/input/multi_market/"
+    'multimarket_archive': "/data_ext/apps/sit/kpimt/archive/input/multi_market/",
+    'ims_path' : "/data_ext/apps/sit/kpimt/input/IMS/",
+    'ims_archive': "/data_ext/apps/sit/kpimt/archive/input/IMS/"
 }
+files_to_deliver = ["Corrections.csv","COSGRE_Matrix_monthly.csv","COSGRE_Matrix_weekly.csv",
+                    "COSROM_Matrix_monthly.csv","COSROM_Matrix_weekly.csv","facts.csv",
+                    "IMS_facts.csv","TMA_Matrix_daily.csv","TMA_Matrix_monthly.csv","TMA_Matrix_weekly.csv",
+                    "TMA_monthly_averages_from_daily_input.csv","TMCG_Matrix_monthly.csv","TMCG_Matrix_weekly.csv",
+                    "TMCZ_Matrix_daily.csv","TMCZ_Matrix_monthly.csv","TMCZ_Matrix_weekly.csv","TMCZ_monthly_averages_from_daily_input.csv",
+                    "TMD_Matrix_monthly.csv","TMD_Matrix_weekly.csv","TMHR_Matrix_monthly.csv","TMHR_Matrix_weekly.csv",
+                    "TMHU_Matrix_monthly.csv","TMHU_Matrix_weekly.csv","TMMK_Matrix_monthly.csv","TMMK_Matrix_weekly.csv",
+                    "TMNL_Matrix_daily.csv","TMNL_Matrix_monthly.csv","TMNL_Matrix_weekly.csv","TMNL_monthly_averages_from_daily_input.csv",
+                    "TMPL_Matrix_daily.csv","TMPL_Matrix_monthly.csv","TMPL_Matrix_weekly.csv","TMPL_monthly_averages_from_daily_input.csv",
+                    "TMSK_Matrix_monthly.csv","TMSK_Matrix_weekly.csv","DTAG-KPI-formular_Report_Mapping_database_master.xlsx","DTAG-KPI-formular_database-master.xlsx"]
+
 
 qs_server_ip='10.105.180.206'
 qs_server_user='cdrs'
@@ -69,6 +82,8 @@ def run_processing():
 def multimarket_processing():
     run_multimarket(params=params)
 
+def ims_processing():
+    run_ims(params=params)
 
 def upload_qs():
     sftp_out.connect()
@@ -76,10 +91,10 @@ def upload_qs():
     matrix_path = local_path + "Matrix/"
     kpis_path = params['kpis_path']
     corrections_path = params['correnctions_path']
-    sftp_out.upload(local_folder=local_path)
-    sftp_out.upload(local_folder=matrix_path)
-    sftp_out.upload(local_folder=kpis_path)
-    sftp_out.upload(local_folder=corrections_path)
+    sftp_out.upload(local_folder=local_path, file_filter=files_to_deliver)
+    sftp_out.upload(local_folder=matrix_path, file_filter=files_to_deliver)
+    sftp_out.upload(local_folder=kpis_path, file_filter=files_to_deliver)
+    sftp_out.upload(local_folder=corrections_path, file_filter=files_to_deliver)
     sftp_out.close()
 
 
@@ -95,6 +110,12 @@ process_multimarket = KerberosPythonOperator(
         dag=dag
     )
 
+process_ims = KerberosPythonOperator(
+        task_id='process_ims',
+        python_callable=ims_processing,
+        dag=dag
+    )
+
 upload_results = KerberosPythonOperator(
         task_id='upload_results',
         python_callable=upload_qs,
@@ -105,4 +126,4 @@ input_archive = BashOperator(task_id='archive_input', bash_command=input_backup,
 output_archive = BashOperator(task_id='archive_output', bash_command=backup_command, dag=dag)
 
 
-input_archive >> output_archive >> process_files >> process_multimarket >> upload_results
+input_archive >> output_archive >> process_files >> process_multimarket >> process_ims >>upload_results

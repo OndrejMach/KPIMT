@@ -1,5 +1,6 @@
 import re
 from datetime import datetime, timedelta
+from sit.kpimt.functions import isfloat
 import pandas as pd
 import numpy as np
 
@@ -14,11 +15,6 @@ class Weekly_avgs:
         self.weeklyOutput=weeklyOutput
 
     def process_data(self):
-        def corrections_correction(x):
-            if (x == "Correction"):
-                return "Correction(s)"
-            else:
-                return x
         def fix_null(row):
             if (pd.isna(row['EDWH_KPI_Name'])):
                 row['EDWH_KPI_Name'] = '*nonamefor_'+str(row['KPI_ID']).upper()
@@ -48,6 +44,8 @@ class Weekly_avgs:
         avg_tmp = pd.merge(daily_output,kpis_map,on="KPI_ID",how="left")
         avg_tmp= avg_tmp.apply(lambda x : fix_null(x), axis=1)
         avg_tmp.rename(columns={'EDWH_KPI_Name':'KPI name'}, inplace=True)
+        avg_tmp['num_values'] = avg_tmp['Value'].apply(lambda x: isfloat(x))
+        avg_tmp = avg_tmp[avg_tmp['num_values'] != False]
         avg_tmp['Value'] = avg_tmp['Value'].apply(lambda x: float(x))
         avg_tmp['was_corrected_Flag'].fillna('', inplace=True)
 

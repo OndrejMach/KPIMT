@@ -1,5 +1,6 @@
 import re
 from sit.kpimt.confs import output_schema, corections_schema
+from sit.kpimt.functions import isfloat
 import pandas as pd
 from datetime import datetime
 import time
@@ -39,9 +40,8 @@ class Weekly_input:
         input['Input_ID'] = None
         input = input.apply(lambda x: get_input_id(x),axis=1)
         input['KPIValue'] = input['Value'].apply(lambda x: str(x).replace(",","."))
-        input['num_values'] = input['KPIValue'].astype(str).str.contains("[a-zA-Z]", regex=True)
-        input = input[
-            input['KPIValue'].astype(str).str.contains("[0-9\.,]", regex=True) & (input['num_values'] != True)]
+        input['num_values'] = input['KPIValue'].apply(lambda x: isfloat(x))
+        input = input[input['num_values'] != False]
         input['KPIValue'] = input['KPIValue'].apply(lambda x: float(x))
         input['Value'] = input['KPIValue']
 

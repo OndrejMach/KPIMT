@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 from sit.kpimt.confs import corections_schema, output_schema
 from sit.kpimt.matrixFunctions import iso_mapping
+from sit.kpimt.functions import isfloat
 
 class Multimarket:
     all_monthly = None
@@ -43,14 +44,14 @@ class Multimarket:
 
 
 
+
         input = self.multimarket_in[self.multimarket_in['Value'].notna()].copy()
         input['KPINameMonthly'] = input['KPI name'].apply(lambda x: str(x).upper().strip())
         input['DatumKPI'] = input['Date'].map(lambda x: get_date(x))
         input['Region'] = input['Region'].apply(lambda x: iso_mapping[str(x)])
         input['KPIValue'] = input['Value'].apply(lambda x: str(x).replace(",", "."))
-        input['num_values'] = input['KPIValue'].astype(str).str.contains("[a-zA-Z]", regex=True)
-        input = input[
-            input['KPIValue'].astype(str).str.contains("[0-9\.,]", regex=True) & (input['num_values'] != True)]
+        input['num_values'] = input['KPIValue'].apply(lambda x: isfloat(x))
+        input = input[input['num_values'] != False]
         input['KPIValue'] = input['KPIValue'].apply(lambda x: float(x))
         input['Input_File'] =self.filename
         input['Input_File_Time'] = self.filetime

@@ -82,3 +82,10 @@ def kpi_updated(row):
     else:
         row['hasUpdate'] = True
 
+def isfloat(value):
+  try:
+    float(value)
+    return True
+  except ValueError:
+    return False
+

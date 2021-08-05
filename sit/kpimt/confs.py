@@ -30,3 +30,14 @@ corections_schema = ['Key_Corr', 'DatumKPI', 'KPINameQVD', 'Natco', 'KPIValueOld
 
 output_schema = ['Input_ID', 'Date', 'KPI name', 'Region', 'Value', 'Remarks', 'Input_File', 'was_corrected_Flag']
 output_daily_schema = ["Input_ID","Date","TimestampTo",	"Region","SourceSystem","KPI_ID","Denominator",	"Numerator","Value","Input_File","was_corrected_Flag"]
+
+files_to_deliver = ["Corrections.csv","COSGRE_Matrix_monthly.csv","COSGRE_Matrix_weekly.csv",
+                    "COSROM_Matrix_monthly.csv","COSROM_Matrix_weekly.csv","facts.csv",
+                    "IMS_facts.csv","TMA_Matrix_daily.csv","TMA_Matrix_monthly.csv","TMA_Matrix_weekly.csv",
+                    "TMA_monthly_averages_from_daily_input.csv","TMCG_Matrix_monthly.csv","TMCG_Matrix_weekly.csv",
+                    "TMCZ_Matrix_daily.csv","TMCZ_Matrix_monthly.csv","TMCZ_Matrix_weekly.csv","TMCZ_monthly_averages_from_daily_input.csv",
+                    "TMD_Matrix_monthly.csv","TMD_Matrix_weekly.csv","TMHR_Matrix_monthly.csv","TMHR_Matrix_weekly.csv",
+                    "TMHU_Matrix_monthly.csv","TMHU_Matrix_weekly.csv","TMMK_Matrix_monthly.csv","TMMK_Matrix_weekly.csv",
+                    "TMNL_Matrix_daily.csv","TMNL_Matrix_monthly.csv","TMNL_Matrix_weekly.csv","TMNL_monthly_averages_from_daily_input.csv",
+                    "TMPL_Matrix_daily.csv","TMPL_Matrix_monthly.csv","TMPL_Matrix_weekly.csv","TMPL_monthly_averages_from_daily_input.csv",
+                    "TMSK_Matrix_monthly.csv","TMSK_Matrix_weekly.csv","DTAG-KPI-formular_Report_Mapping_database_master.xlsx","DTAG-KPI-formular_database-master.xlsx"]

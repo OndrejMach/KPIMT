@@ -11,6 +11,7 @@ from sit.kpimt.Weekly_avgs import Weekly_avgs
 from sit.kpimt.Monthly_avgs import Monthly_avgs
 from sit.kpimt.Multimarket import Multimarket
 from sit.kpimt.functions import get_file_timestamp
+from sit.kpimt.IMS_processing import IMS_processing
 from datetime import  datetime
 
 
@@ -22,7 +23,9 @@ params = {
     'basepath': "/Users/ondrejmachacek/tmp/KPI/input",
     "output_path": "/Users/ondrejmachacek/tmp/KPI/output/",
     'multimarket': "/Users/ondrejmachacek/tmp/KPI/multimarket/",
-    'multimarket_archive': "/Users/ondrejmachacek/tmp/KPI/multimarket/"
+    'multimarket_archive': "/Users/ondrejmachacek/tmp/KPI/multimarket/",
+    'ims_path' : "/Users/ondrejmachacek/tmp/KPI/IMS",
+    'ims_archive': "/Users/ondrejmachacek/tmp/KPI/IMS/"
 }
 
 
@@ -118,6 +121,15 @@ def run_multimarket(params):
             data[natco].to_csv(params['output_path']+"/"+natco+"_monthly.csv", sep="|", index=False)
         os.rename(filename, params['multimarket_archive']+"/"+path.basename(filename)+"_"+datetime.now().strftime('%Y%m%d%H%M%S'))
 
+def run_ims(params):
+    print("STARTING IMS PROCESSING ")
+    all_files = glob(params['ims_path'] + "/*.xlsx")
+    for filename in all_files:
+        print("PROCESSING FILENAME " + filename)
+        ims_input_data = pd.read_excel(filename, header=0)
+        data = IMS_processing(ims_data=ims_input_data).process_data()
+        data.to_csv(params['output_path']+"/IMS_facts.csv", sep="|", index=False)
+        os.rename(filename, params['ims_archive']+"/"+path.basename(filename)+"_"+datetime.now().strftime('%Y%m%d%H%M%S'))
 
 
 
@@ -129,7 +141,9 @@ if __name__ == '__main__':
     #run_outputs_processing("COSGRE", 'weekly_input', params)
     #kpis = KPI_reader(params['kpis_path']).read_data()
     #run_matrix_processing("TMA", params)
-    run_multimarket(params)
+    #run_multimarket(params)
+    #print(float(0,5))
+    run_ims(params)
 
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
