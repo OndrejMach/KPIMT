@@ -1,6 +1,7 @@
 import pandas as pd
 from datetime import datetime
 import time
+import re
 from sit.kpimt.confs import output_schema, corections_schema
 from sit.kpimt.functions import isfloat
 
@@ -29,8 +30,13 @@ class Monthly_input:
             row['Input_ID'] = "{}-{}-{}-m".format(row['Region'], row['KPINameMonthly'], row['DatumKPI'])
             return row
 
+        def get_date(date):
+            date_f = str(date).split(sep=" ")[0]
+            date_format = "%d.%m.%Y" if (re.match("\d{2}.\d{2}.\d{4}", date_f)) else "%Y-%m-%d"
+            return datetime.strptime(date_f, date_format).strftime("%d.%m.%Y")
+
         input =self.raw_input[(self.raw_input['Value'].notna())].copy()
-        input['DatumKPI'] = input['Date'].map(lambda x: datetime.strptime(str(x),self.datetime_format).strftime("%d.%m.%Y"))
+        input['DatumKPI'] = input['Date'].map(lambda x: get_date(x))
         input['Natco'] = self.natco
         input['Region'] = self.natco
         input['KPINameMonthly'] = input['KPI name'].map(lambda x: str(x).upper().strip())

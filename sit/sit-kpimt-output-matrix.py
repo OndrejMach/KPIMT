@@ -38,7 +38,7 @@ params = {
     'ims_archive': "/data_ext/apps/sit/kpimt/archive/input/IMS/"
 }
 files_to_deliver = ["Corrections.csv","COSGRE_Matrix_monthly.csv","COSGRE_Matrix_weekly.csv",
-                    "COSROM_Matrix_monthly.csv","COSROM_Matrix_weekly.csv","facts.csv",
+                    "COSROM_Matrix_monthly.csv","COSROM_Matrix_weekly.csv",
                     "IMS_facts.csv","TMA_Matrix_daily.csv","TMA_Matrix_monthly.csv","TMA_Matrix_weekly.csv",
                     "TMA_monthly_averages_from_daily_input.csv","TMCG_Matrix_monthly.csv","TMCG_Matrix_weekly.csv",
                     "TMCZ_Matrix_daily.csv","TMCZ_Matrix_monthly.csv","TMCZ_Matrix_weekly.csv","TMCZ_monthly_averages_from_daily_input.csv",
