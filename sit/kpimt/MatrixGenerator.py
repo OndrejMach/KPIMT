@@ -38,11 +38,11 @@ class MatrixGeneratorDaily:
         kpi_database = cross_tab.groupby(['KPI_ID', 'KPI_Name', 'Natco']).agg(
             requested_Daily=("requested_Daily", "max"), requested_Weekly=("requested_Weekly", "max"),
             requested_Monthly=("requested_Monthly", "max")).reset_index()
-        kpi_database['Natco'] = kpi_database['Natco'].apply(lambda x: iso_mapping[x])
-        kpi_database = kpi_database[kpi_database['Natco'] == self.natCo].copy()
+        kpi_database['NatcoC'] = kpi_database['Natco'].apply(lambda x: iso_mapping[x])
+        kpi_database = kpi_database[kpi_database['NatcoC'] == self.natCo].copy()
         print("CROSS_TAB INFO:")
         print(kpi_database.info())
-        #print(kpi_database.info)
+        print(kpi_database.info)
 
         sdate = date(2014, 1, 1)  # start date
         edate = date.today()
@@ -84,7 +84,7 @@ class MatrixGeneratorDaily:
         matrix_day.drop(columns=['tmp'], inplace=True)
         print("JOIN WITH CALENDAR DONE")
         print(matrix_day.info())
-        #print(matrix_day.info)
+        print(matrix_day.info)
 
         # daily_out = pd.read_csv("/Users/ondrejmachacek/tmp/KPI/outs/TMA_daily_13-7-2021.csv", delimiter='|',
         #      header=0).rename(columns={"Date": "Time"})
@@ -150,7 +150,7 @@ class MatrixGeneratorDaily:
             monthly_out = self.monthly_output.rename(columns={
                 "Date": "Time"})  # pd.read_csv("/Users/ondrejmachacek/tmp/KPI/outs/TMA_daily_13-7-2021.csv", delimiter='|',
             #           header=0).rename(columns={"Date": "Time"})
-            RemarksMAP = weekly_out[["Input_ID", "Remarks"]].drop_duplicates()
+            RemarksMAP = monthly_out[["Input_ID", "Remarks"]].drop_duplicates()
 
             matrix_month['KEY1'] = None
 
@@ -162,6 +162,7 @@ class MatrixGeneratorDaily:
             result_monthly = all_join(matrix_month_enriched,to_join)
             result_monthly.rename(columns={'Input_ID': 'KEY1','Value': 'KPI_Value', "isDelivered": "IsDelivered"}, inplace=True)
             result_monthly = result_monthly[matrix_schema_monthly]
+            print(result_monthly.info)
 
 
         return {"daily_matrix": result_daily, "weekly_matrix": result_weekly, "monthly_matrix": result_monthly}

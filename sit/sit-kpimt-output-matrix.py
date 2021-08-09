@@ -22,7 +22,7 @@ dag = DAG(
     default_args=default_args,
     description='SIT_PROD_KPIMT_OUTPUTS_MATRIX',
     start_date=datetime(2017, 3, 20),
-    schedule_interval = '00 13 * * *',
+    schedule_interval = '20 12 * * *',
     catchup=False)
 
 params = {
@@ -73,12 +73,7 @@ def run_processing():
             run_avg_processing(natco=natco, params=params, mode="monthly")
         weekly_files_procesed = run_outputs_processing(mode="weekly_input", natco=natco, params=params)
         monthly_files_processed = run_outputs_processing(mode="monthly_input", natco=natco, params=params)
-        total_files_processed = daily_files_processed + weekly_files_procesed + monthly_files_processed
-        if (total_files_processed >0):
-            print("running matrix processing")
-            run_matrix_processing(natco=natco, params=params)
-        else:
-            print("NO INPUT FILES TO PROCESS, SKIPPING NATCO: " + natco)
+
 def multimarket_processing():
     run_multimarket(params=params)
 
@@ -98,6 +93,12 @@ def upload_qs():
     sftp_out.close()
 
 
+def matrix_processing():
+    for natco in natco_list:
+        print("running matrix processing")
+        run_matrix_processing(natco=natco, params=params)
+
+
 process_files = KerberosPythonOperator(
         task_id='process_files',
         python_callable=run_processing,
@@ -107,6 +108,12 @@ process_files = KerberosPythonOperator(
 process_multimarket = KerberosPythonOperator(
         task_id='process_multimarket',
         python_callable=multimarket_processing,
+        dag=dag
+    )
+
+process_matrices = KerberosPythonOperator(
+        task_id='matrix_processing',
+        python_callable=matrix_processing,
         dag=dag
     )
 
@@ -126,4 +133,4 @@ input_archive = BashOperator(task_id='archive_input', bash_command=input_backup,
 output_archive = BashOperator(task_id='archive_output', bash_command=backup_command, dag=dag)
 
 
-input_archive >> output_archive >> process_files >> process_multimarket >> process_ims >>upload_results
+input_archive >> output_archive >> process_files >> process_multimarket >>process_matrices >> process_ims >>upload_results

@@ -3,7 +3,7 @@ import re
 import pandas as pd
 import time
 from datetime import datetime
-from sit.kpimt.confs import corections_schema, output_schema
+from sit.kpimt.confs import corections_schema, output_schema, natcos
 from sit.kpimt.matrixFunctions import iso_mapping
 from sit.kpimt.functions import isfloat
 
@@ -14,14 +14,16 @@ class Multimarket:
     filetime = None
     corrections = None
     datetime_format = None
+    regions = None
 
-    def __init__(self, all_monthly, multimarket_in, filename, filetime, corrections, datetime_format = "%d.%m.%Y"):
+    def __init__(self, all_monthly, multimarket_in, filename, filetime, corrections, datetime_format = "%d.%m.%Y", regions=natcos):
         self.all_monthly = all_monthly
         self.multimarket_in = multimarket_in
         self.filetime = filetime
         self.filename = filename
         self.corrections = corrections
         self.datetime_format = datetime_format
+        self.regions = regions
 
 
     def process_data(self):
@@ -120,13 +122,14 @@ class Multimarket:
         monthly2 = pd.concat([monthly2, all_monthly_filtered])[output_schema]
         print("OVERALL RESULT:")
         print(monthly2.info())
+        result = {}
+        for natco in self.regions:
+            print("FILTERING NATCO: "+natco)
+            result[natco] = monthly2[monthly2['Region'] == natco]
+        result['corrections'] = result_corrections
 
-        return {"corrections": result_corrections,
-                "TMA" : monthly2[monthly2['Region'] == 'TMA'],
-                "TMCZ": monthly2[monthly2['Region'] == 'TMCZ'],
-                "TMHR": monthly2[monthly2['Region'] == 'TMHR'],
-                "COSROM": monthly2[monthly2['Region'] == 'COSROM']
-                }
+        return result
+
 
 
 

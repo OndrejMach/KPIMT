@@ -69,7 +69,7 @@ def week_year(date):
 
 def get_key(row, period):
     #applymap('ISO_map',Natco)  & '-' & upper(KPI_ID) & '-' & Date & '-d'  as KEY1;
-    row['KEY1'] = "{}-{}-{}-{}".format(row['Natco'],str(row['KPI_ID']).upper(), row['Date'].strftime("%d.%m.%Y"), period)
+    row['KEY1'] = "{}-{}-{}-{}".format(iso_mapping[row['Natco']],str(row['KPI_ID']).upper(), row['Date'].strftime("%d.%m.%Y"), period)
     return row
 
 def get_lookups(out):

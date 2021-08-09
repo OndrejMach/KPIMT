@@ -4,7 +4,7 @@ import pandas as pd
 from glob import  glob
 from sit.kpimt.KPIs_reader import KPI_reader
 from sit.kpimt.Output_processor import Output_processor
-from sit.kpimt.confs import outputs
+from sit.kpimt.confs import outputs, natcos
 from os import path
 from sit.kpimt.MatrixGenerator import MatrixGeneratorDaily
 from sit.kpimt.Weekly_avgs import Weekly_avgs
@@ -100,7 +100,7 @@ def run_avg_processing(params, natco, mode):
 
 def run_multimarket(params):
     print("STARTING MULTIMARKET PROCESSING")
-    multimarket_natcos = ["TMA","TMCZ","TMHR","COSROM"]
+    multimarket_natcos = natcos #["TMA","TMCZ","TMHR","COSROM"]
     all_files = glob(params['output_path'] + "/*monthly.csv")
     li = []
     for filename in all_files:
@@ -140,10 +140,10 @@ def run_ims(params):
 if __name__ == '__main__':
     #run_outputs_processing("COSGRE", 'weekly_input', params)
     #kpis = KPI_reader(params['kpis_path']).read_data()
-    #run_matrix_processing("TMA", params)
+    run_matrix_processing("TMA", params)
     #run_multimarket(params)
     #print(float(0,5))
-    run_ims(params)
+    #run_ims(params)
 
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
