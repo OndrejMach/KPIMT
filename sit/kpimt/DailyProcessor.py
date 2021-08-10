@@ -76,7 +76,7 @@ class DailyProcessor:
         output = output[["Input_ID", "KPIValueOld", "Input_File_Old"]]
         output = output[pd.notna(output["Input_ID"])]
 
-        value_map = output[['Input_ID', 'KPIValueOld']].drop_duplicates()
+        value_map = output[['Input_ID', 'KPIValueOld']].groupby(['Input_ID']).agg(KPIValueOld=("KPIValueOld", 'max')).reset_index()
         kpi_value_map = value_map.rename(columns = {'KPIValueOld':'KPIValueCompare'})
         input_file_map = output[['Input_ID', 'Input_File_Old']].drop_duplicates()
 

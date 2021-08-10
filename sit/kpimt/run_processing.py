@@ -12,6 +12,7 @@ from sit.kpimt.Monthly_avgs import Monthly_avgs
 from sit.kpimt.Multimarket import Multimarket
 from sit.kpimt.functions import get_file_timestamp
 from sit.kpimt.IMS_processing import IMS_processing
+from sit.kpimt.KPI_Report import KPI_Report
 from datetime import  datetime
 
 
@@ -25,9 +26,12 @@ params = {
     'multimarket': "/Users/ondrejmachacek/tmp/KPI/multimarket/",
     'multimarket_archive': "/Users/ondrejmachacek/tmp/KPI/multimarket/",
     'ims_path' : "/Users/ondrejmachacek/tmp/KPI/IMS",
-    'ims_archive': "/Users/ondrejmachacek/tmp/KPI/IMS/"
+    'ims_archive': "/Users/ondrejmachacek/tmp/KPI/IMS/",
+    'reports_path' :'/Users/ondrejmachacek/tmp/KPI/output/reports'
 }
 
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_colwidth', None)
 
 def run_outputs_processing(natco, mode, params):
     pd.set_option('display.max_columns', None)
@@ -132,6 +136,25 @@ def run_ims(params):
         os.rename(filename, params['ims_archive']+"/"+path.basename(filename)+"_"+datetime.now().strftime('%Y%m%d%H%M%S'))
 
 
+def generate_report(kpis_path, matrix_path, reports_path):
+    kpis = pd.read_excel(kpis_path + "/DTAG-KPI-formular_database-master.xlsx", header=1,
+                         sheet_name='PM-data-base')
+    for natco in natcos:
+        filename = '{}/{}_Matrix_monthly.csv'.format(matrix_path, natco)
+
+        if path.exists(filename):
+            print("PROCESSING FILE: "+filename)
+            monthly_matrix = pd.read_csv(filename, delimiter='|', header=0, dtype=str)
+
+            data = KPI_Report(kpis=kpis, matrix_monthly=monthly_matrix, natco= natco).process_data()
+            output_filename= reports_path + "/KPILoadAndStatusMonitor_"+natco+".xlsx"
+            data.to_excel(output_filename,  index=False)
+        else:
+            print("FILE: "+filename +" does not exist!!")
+
+
+
+
 
 
 
@@ -140,10 +163,11 @@ def run_ims(params):
 if __name__ == '__main__':
     #run_outputs_processing("COSGRE", 'weekly_input', params)
     #kpis = KPI_reader(params['kpis_path']).read_data()
-    run_matrix_processing("TMA", params)
+    #run_matrix_processing("TMA", params)
     #run_multimarket(params)
     #print(float(0,5))
     #run_ims(params)
+    generate_report(kpis_path = params['kpis_path'], matrix_path=params['output_path']+"/Matrix/", reports_path=params['reports_path'])
 
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

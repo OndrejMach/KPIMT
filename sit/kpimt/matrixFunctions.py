@@ -24,11 +24,11 @@ iso_mapping = {
 def set_requested(row):
     if ( not pd.isnull(row['Requested'])):
         if ("1" in str(row['Natco'])):
-            row['requested_Weekly'] = 1
+            row['requested_Weekly'] = int(1)
         elif ("2" in str(row['Natco'])):
-            row['requested_Monthly'] = 1
+            row['requested_Monthly'] = int(1)
         else:
-            row['requested_Daily'] = 1
+            row['requested_Daily'] = int(1)
     row['KPI_ID'] = str(row['KPI_ID']).strip()
     row['KPI_Name'] = str(row['KPI_Name']).strip()
     row['Natco'] = str(row['Natco'])[0:2]
@@ -72,11 +72,16 @@ def get_key(row, period):
     row['KEY1'] = "{}-{}-{}-{}".format(iso_mapping[row['Natco']],str(row['KPI_ID']).upper(), row['Date'].strftime("%d.%m.%Y"), period)
     return row
 
+def get_key_w_m(row, period):
+    #applymap('ISO_map',Natco)  & '-' & upper(KPI_ID) & '-' & Date & '-d'  as KEY1;
+    row['KEY1'] = "{}-{}-{}-{}".format(iso_mapping[row['Natco']],str(row['KPI_Name']).upper(), row['Date'].strftime("%d.%m.%Y"), period)
+    return row
+
 def get_lookups(out):
-    NATVALUEMAP = out[["Input_ID", "Value"]].drop_duplicates()
+    NATVALUEMAP = out[["Input_ID", "Value"]].groupby(['Input_ID']).agg(Value=("Value", 'max')).reset_index()
     NATTIMEMAP = out[["Input_ID", "Time"]].drop_duplicates()
-    NATDELMAP = out[["Input_ID", "Value"]].drop_duplicates()
-    NATDELMAP['isDelivered'] = NATDELMAP['Value'].apply(lambda x: 0 if (pd.isnull(x)) else 1)
+    NATDELMAP = out[["Input_ID", "Value"]].groupby(['Input_ID']).agg(Value=("Value", 'max')).reset_index()
+    NATDELMAP['isDelivered'] = NATDELMAP['Value'].apply(lambda x: "0" if (pd.isnull(x)) else "1")
     NATDELMAP = NATDELMAP[['Input_ID', 'isDelivered']]
     Input_FileMAP = out[["Input_ID", "Input_File"]].drop_duplicates()
     WasCorrectedMAP = out[["Input_ID", "was_corrected_Flag"]].drop_duplicates()

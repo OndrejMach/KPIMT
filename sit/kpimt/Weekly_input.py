@@ -61,7 +61,7 @@ class Weekly_input:
         print("INPUT COUNT: " + str(weekly_output.shape[0]))
         print(weekly_output.info())
 
-        value_map = weekly_output[['Input_ID', 'KPIValueOld']].drop_duplicates()
+        value_map = weekly_output[['Input_ID', 'KPIValueOld']].groupby(['Input_ID']).agg(KPIValueOld=("KPIValueOld", 'max')).reset_index()
         input_file_map = weekly_output[['Input_ID', 'Input_File']].drop_duplicates()
         input_file_map.rename(columns={"Input_File":"Input_File_Old"}, inplace = True)
         remarks_map = weekly_output[['Input_ID', 'Remarks']].drop_duplicates()

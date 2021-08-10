@@ -2,7 +2,7 @@ import math
 import pandas as pd
 from datetime import date, timedelta
 from sit.kpimt.matrixFunctions import check_year, check_last_year, check_last_ytd, set_requested, week_year, get_key, \
-    get_lookups, all_join, iso_mapping
+    get_lookups, all_join, iso_mapping, get_key_w_m
 from sit.kpimt.confs import matrix_schema_daily,matrix_schema_weekly, matrix_schema_monthly
 
 
@@ -31,9 +31,9 @@ class MatrixGeneratorDaily:
 
         data_filtered.rename(columns={"EDWH KPI_ID": "KPI_ID", "KPI name": "KPI_Name"}, inplace=True)
         cross_tab = data_filtered.melt(id_vars=["KPI_ID", "KPI_Name"], var_name="Natco", value_name="Requested")
-        cross_tab["requested_Daily"] = 0
-        cross_tab["requested_Weekly"] = 0
-        cross_tab["requested_Monthly"] = 0
+        cross_tab["requested_Daily"] = int(0)
+        cross_tab["requested_Weekly"] = int(0)
+        cross_tab["requested_Monthly"] = int(0)
         cross_tab = cross_tab.apply(lambda row: set_requested(row), axis=1)
         kpi_database = cross_tab.groupby(['KPI_ID', 'KPI_Name', 'Natco']).agg(
             requested_Daily=("requested_Daily", "max"), requested_Weekly=("requested_Weekly", "max"),
@@ -136,7 +136,7 @@ class MatrixGeneratorDaily:
             RemarksMAP = weekly_out[["Input_ID", "Remarks"]].drop_duplicates()
 
             matrix_week['KEY1'] = None
-            matrix_week_enriched = matrix_week.apply(lambda row: get_key(row, 'w'),
+            matrix_week_enriched = matrix_week.apply(lambda row: get_key_w_m(row, 'w'),
                                                                                          axis=1)
             #matrix_week_enriched = matrix_week_enriched[matrix_week_enriched['Natco'] == self.natCo]
             matrix_week_enriched.rename(columns={'KEY1': 'Input_ID'}, inplace=True)
@@ -154,7 +154,7 @@ class MatrixGeneratorDaily:
 
             matrix_month['KEY1'] = None
 
-            matrix_month_enriched = matrix_month.apply(lambda row: get_key(row, 'm'), axis=1)
+            matrix_month_enriched = matrix_month.apply(lambda row: get_key_w_m(row, 'm'), axis=1)
             #matrix_month_enriched = matrix_month_enriched[matrix_month_enriched['Natco'] == self.natCo]
             matrix_month_enriched.rename(columns={'KEY1': 'Input_ID'}, inplace=True)
             to_join =  get_lookups(monthly_out) + [

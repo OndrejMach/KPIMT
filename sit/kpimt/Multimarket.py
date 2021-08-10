@@ -68,7 +68,7 @@ class Multimarket:
 
         monthly = self.all_monthly[self.all_monthly['Input_ID'].notna()].copy()
         monthly.rename(columns={"Value": "KPIValueOld"}, inplace=True)
-        value_map = monthly[['Input_ID', 'KPIValueOld']].drop_duplicates()
+        value_map = monthly[['Input_ID', 'KPIValueOld']].groupby(['Input_ID']).agg(KPIValueOld=("KPIValueOld", 'max'))
         input_file_map = monthly[['Input_ID', 'Input_File']].drop_duplicates()
         input_file_map.rename(columns={"Input_File" : "Input_File_Old"}, inplace=True)
         remarks_map=monthly[['Input_ID', 'Remarks']].drop_duplicates()

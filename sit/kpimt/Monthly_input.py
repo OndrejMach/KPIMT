@@ -66,7 +66,7 @@ class Monthly_input:
         print("INPUT COUNT: " + str(monthly_output.shape[0]))
         print(monthly_output.info())
 
-        value_map = monthly_output[['Input_ID', 'KPIValueOld']].drop_duplicates()
+        value_map = monthly_output[['Input_ID', 'KPIValueOld']].groupby(['Input_ID']).agg(KPIValueOld=("KPIValueOld", 'max')).reset_index()
         input_file_map = monthly_output[['Input_ID', 'Input_File']].drop_duplicates()
         input_file_map.rename(columns={"Input_File":"Input_File_Old"}, inplace = True)
         remarks_map = monthly_output[['Input_ID', 'Remarks']].drop_duplicates()
