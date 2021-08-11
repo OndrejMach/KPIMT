@@ -45,9 +45,9 @@ class KPI_Report:
         last_2_month = get_minus_months(2)
         last_3_month = get_minus_months(3)
 
-        last_month_col = get_minus_months(1, '%Y-%m')
-        last_2_month_col = get_minus_months(2, '%Y-%m')
-        last_3_month_col = get_minus_months(3, '%Y-%m')
+        last_month_col = get_minus_months(1, '%Y-%b')
+        last_2_month_col = get_minus_months(2, '%Y-%b')
+        last_3_month_col = get_minus_months(3, '%Y-%b')
 
         print(last_month)
         print(last_2_month)

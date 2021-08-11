@@ -29,9 +29,13 @@ class Weekly_input:
         def get_input_id(row):
             row['Input_ID'] = "{}-{}-{}-w".format(row['Region'], row['KPINameWeekly'], row['DatumKPI'])
             return row
+        def get_date(date):
+            date_f = str(date).split(sep=" ")[0]
+            date_format = "%d.%m.%Y" if (re.match("\d{2}.\d{2}.\d{4}", date_f)) else "%Y-%m-%d"
+            return datetime.strptime(date_f, date_format).strftime("%d.%m.%Y")
 
         input =self.raw_input[(self.raw_input['Value'].notna())].copy()
-        input['DatumKPI'] = input['Date'].map(lambda x: datetime.strptime(str(x),self.datetime_format).strftime("%d.%m.%Y"))
+        input['DatumKPI'] = input['Date'].map(lambda x: get_date(x))
         input['Natco'] = self.natco
         input['Region'] = self.natco
         input['KPINameWeekly'] = input['KPI name'].map(lambda x: str(x).upper().strip())

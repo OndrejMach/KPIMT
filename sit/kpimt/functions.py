@@ -30,7 +30,16 @@ def get_input_data(file):
         elif ("monthly" in str(file)):
             return pd.read_csv(file, delimiter='|', header=0)
     if (str(file).endswith("xls") or str(file).endswith("xlsx")):
-        return pd.read_excel(file, header=0)
+        xl = pd.ExcelFile(file)
+        sheet= "Sheet1"
+        if ("Sheet1" in xl.sheet_names):
+            sheet = "Sheet1"
+        elif ("Sheet1$" in xl.sheet_names):
+            sheet = "Sheet1$"
+        elif ("sheet1" in xl.sheet_names):
+            sheet = "sheet1"
+
+        return pd.read_excel(file, header=0, sheet_name=sheet)
 
 def date_to_month(date):
     return "00{}{}".format(date[4:6], date[0:4])

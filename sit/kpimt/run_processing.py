@@ -148,7 +148,18 @@ def generate_report(kpis_path, matrix_path, reports_path):
 
             data = KPI_Report(kpis=kpis, matrix_monthly=monthly_matrix, natco= natco).process_data()
             output_filename= reports_path + "/KPILoadAndStatusMonitor_"+natco+".xlsx"
-            data.to_excel(output_filename,  index=False)
+            writer = pd.ExcelWriter(output_filename)
+            data.to_excel(writer, sheet_name='sheet1', index=False, na_rep='NaN')
+
+            # Auto-adjust columns' width
+            for column in data:
+                column_width = max(data[column].astype(str).map(len).max(), len(column))
+                col_idx = data.columns.get_loc(column)
+                writer.sheets['sheet1'].set_column(col_idx, col_idx, column_width)
+            writer.save()
+
+
+            #data.to_excel(output_filename,  index=False)
         else:
             print("FILE: "+filename +" does not exist!!")
 
