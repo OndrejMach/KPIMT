@@ -29,6 +29,9 @@ def get_input_data(file):
             return pd.read_csv(file,delimiter='|', header=None, names=daily_raw_header)
         elif ("monthly" in str(file)):
             return pd.read_csv(file, delimiter='|', header=0)
+        elif ("weekly" in str(file) and "TMHU" in str(file)):
+            return pd.read_csv(file, delimiter='|', header=0)
+
     if (str(file).endswith("xls") or str(file).endswith("xlsx")):
         xl = pd.ExcelFile(file)
         sheet= "Sheet1"
