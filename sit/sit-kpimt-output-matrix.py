@@ -22,7 +22,7 @@ dag = DAG(
     default_args=default_args,
     description='SIT_PROD_KPIMT_OUTPUTS_MATRIX',
     start_date=datetime(2017, 3, 20),
-    schedule_interval = '20 12 * * *',
+    schedule_interval = '05 7,11,15 * * *',
     catchup=False)
 
 params = {
