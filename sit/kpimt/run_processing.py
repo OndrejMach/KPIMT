@@ -139,7 +139,8 @@ def run_ims(params):
 def generate_report(kpis_path, matrix_path, reports_path):
     kpis = pd.read_excel(kpis_path + "/DTAG-KPI-formular_database-master.xlsx", header=1,
                          sheet_name='PM-data-base')
-    for natco in natcos:
+    natcos_for_report = [f for f in natcos if f not in ['TMD', 'AMC']]
+    for natco in natcos_for_report:
         filename = '{}/{}_Matrix_monthly.csv'.format(matrix_path, natco)
 
         if path.exists(filename):
