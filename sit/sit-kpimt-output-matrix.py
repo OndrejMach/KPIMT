@@ -26,7 +26,7 @@ dag = DAG(
     catchup=False)
 
 params = {
-    "kpis_path": "/data_ext/apps/sit/kpimt/kpi_request/",
+    "kpis_path": "/data_ext/apps/sit/kpimt/input/other_files/",
     "correnctions_path": "/data_ext/apps/sit/kpimt/correction/",
     'basepath': "/data_ext/apps/sit/kpimt/input/",
     "output_path": "/data_ext/apps/sit/kpimt/output/",
