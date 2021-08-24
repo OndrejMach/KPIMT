@@ -42,9 +42,9 @@ sit_proxy_user='cdrs_source'
 sit_proxy_folder='/IntKPIMonitoring'
 
 #QV forwarding (old solution)
-qv_server_ip='10.105.252.96'
-qv_server_user='cdrs'
-qv_server_folder='/'
+#qv_server_ip='10.105.252.96'
+#qv_server_user='cdrs'
+#qv_server_folder='/'
 
 #QS server (new solution)
 qs_server_ip='10.105.180.206'
@@ -54,7 +54,7 @@ qs_server_folder='/IntKPIMonitoring'
 natco_list=["COSGRE", "COSROM", "TMA", "TMCG", "TMCZ", "TMD", "TMHR", "TMHU", "TMMK", "TMNL", "TMPL", "TMSK"]
 
 sftp_in = SFTP_handler(host=sit_proxy_ip, private_key=cdrs_sftp_key ,chdir=sit_proxy_folder,username=sit_proxy_user)
-sftp_out = SFTP_handler(host=qv_server_ip,private_key=cdrs_sftp_key ,chdir=qv_server_folder,username=qv_server_user)
+#sftp_out = SFTP_handler(host=qv_server_ip,private_key=cdrs_sftp_key ,chdir=qv_server_folder,username=qv_server_user)
 
 #tmpFile = sftp_in.getTmpFile(app_tmp)
 
@@ -64,14 +64,14 @@ def handle_multimarket():
     local_path = "{}/multi_market/".format(edgeInputFolder)
     if (sftp_in.set_chdir(remote_path)):
         sftp_in.get(local_path=local_path)
-    sftp_out.connect()
-    qv_path = "/multi_market/monthly_input/"
-    if (sftp_out.set_chdir(qv_path)):
-        sftp_out.upload(local_folder=local_path)
+    #sftp_out.connect()
+    #qv_path = "/multi_market/monthly_input/"
+    #if (sftp_out.set_chdir(qv_path)):
+    #    sftp_out.upload(local_folder=local_path)
     if (sftp_in.set_chdir(remote_path)):
         sftp_in.delete()
     sftp_in.close()
-    sftp_out.close()
+   # sftp_out.close()
 
 def handle_ims():
     sftp_in.connect()
@@ -79,14 +79,14 @@ def handle_ims():
     local_path = "{}/IMS/".format(edgeInputFolder)
     if (sftp_in.set_chdir(remote_path)):
         sftp_in.get(local_path=local_path)
-    sftp_out.connect()
-    qv_path = "/IMS/Performance_Data/"
-    if (sftp_out.set_chdir(qv_path)):
-        sftp_out.upload(local_folder=local_path)
+    #sftp_out.connect()
+    #qv_path = "/IMS/Performance_Data/"
+    #if (sftp_out.set_chdir(qv_path)):
+    #    sftp_out.upload(local_folder=local_path)
     if (sftp_in.set_chdir(remote_path)):
         sftp_in.delete()
     sftp_in.close()
-    sftp_out.close()
+    #sftp_out.close()
 
 def handle_kpi_request():
     sftp_in.connect()
@@ -94,14 +94,14 @@ def handle_kpi_request():
     local_path = "{}/other_files/".format(edgeInputFolder)
     if(sftp_in.set_chdir(remote_path)):
         sftp_in.get(local_path=local_path)
-    sftp_out.connect()
+    #sftp_out.connect()
     qv_path = "/KPIRequest/"
-    if(sftp_out.set_chdir(qv_path)):
-        sftp_out.upload(local_folder=local_path)
+    #if(sftp_out.set_chdir(qv_path)):
+    #    sftp_out.upload(local_folder=local_path)
     if (sftp_in.set_chdir(remote_path)):
         sftp_in.delete()
     sftp_in.close()
-    sftp_out.close()
+    #sftp_out.close()
 
 def download_files_sftp():
     sftp_in.connect()
@@ -135,29 +135,29 @@ def delete_files_sftp():
     sftp_in.close()
 
 
-def upload_sftp():
-    sftp_out.connect()
-    for natco in natco_list:
-        remote_path = "/{}/daily_DWH_feed/".format(natco)
-        local_path = "{}/{}/daily/".format(edgeInputFolder,natco)
-        if (sftp_out.set_chdir(remote_path)):
-            sftp_out.upload(local_folder=local_path)
-        remote_path = "/{}/weekly_input/".format(natco)
-        local_path = "{}/{}/weekly/".format(edgeInputFolder, natco)
-        if (sftp_out.set_chdir(remote_path)):
-            sftp_out.upload(local_folder=local_path)
-        remote_path = "/{}/monthly_input/".format(natco)
-        local_path = "{}/{}/monthly/".format(edgeInputFolder, natco)
-        if (sftp_out.set_chdir(remote_path)):
-            sftp_out.upload(local_folder=local_path)
-    sftp_out.close()
+# def upload_sftp():
+#     sftp_out.connect()
+#     for natco in natco_list:
+#         remote_path = "/{}/daily_DWH_feed/".format(natco)
+#         local_path = "{}/{}/daily/".format(edgeInputFolder,natco)
+#         if (sftp_out.set_chdir(remote_path)):
+#             sftp_out.upload(local_folder=local_path)
+#         remote_path = "/{}/weekly_input/".format(natco)
+#         local_path = "{}/{}/weekly/".format(edgeInputFolder, natco)
+#         if (sftp_out.set_chdir(remote_path)):
+#             sftp_out.upload(local_folder=local_path)
+#         remote_path = "/{}/monthly_input/".format(natco)
+#         local_path = "{}/{}/monthly/".format(edgeInputFolder, natco)
+#         if (sftp_out.set_chdir(remote_path)):
+#             sftp_out.upload(local_folder=local_path)
+#     sftp_out.close()
 
 
-deliver_files = KerberosPythonOperator(
-        task_id='upload_sftp',
-        python_callable=upload_sftp,
-        dag=dag
-    )
+# deliver_files = KerberosPythonOperator(
+#         task_id='upload_sftp',
+#         python_callable=upload_sftp,
+#         dag=dag
+#     )
 
 download_files = KerberosPythonOperator(
         task_id='download_files_sftp',
@@ -189,4 +189,4 @@ kpi_requests = KerberosPythonOperator(
     dag=dag,
 )
 
-download_files >> deliver_files >> delete_files >>multi_market >> ims >> kpi_requests #'delete_files' shoule be added
+download_files >> delete_files >>multi_market >> ims >> kpi_requests #deliver_files >> QV removed solution
