@@ -35,6 +35,8 @@ class Monthly_input:
             date_format = "%d.%m.%Y" if (re.match("\d{2}.\d{2}.\d{4}", date_f)) else "%Y-%m-%d"
             return datetime.strptime(date_f, date_format).strftime("%d.%m.%Y")
 
+
+
         input =self.raw_input[(self.raw_input['Value'].notna())].copy()
         input['DatumKPI'] = input['Date'].map(lambda x: get_date(x))
         input['Natco'] = self.natco
@@ -49,9 +51,13 @@ class Monthly_input:
         input = input[input['num_values'] != False]
         input['KPIValue'] = input['KPIValue'].apply(lambda x: float(x))
         input['Value'] = input['KPIValue']
+        if ('Remarks' not in input.columns):
+            input['Remarks'] = ''
 
         input_raw = input[['Input_ID','DatumKPI', 'KPINameMonthly', 'Region', 'Value','Remarks','Input_File' ]].copy()
         input_raw.rename(columns={'DatumKPI':'Date','KPINameMonthly':'KPI name' }, inplace= True)
+        if ('Remarks' not in input_raw.columns):
+            input_raw['Remarks'] = ''
         input_raw = input_raw[['Input_ID', 'Date', 'KPI name', 'Region','Value','Remarks','Input_File']]
 
         input = input[['Input_ID','DatumKPI','KPINameMonthly','Region','KPIValue','Remarks','Input_File','Input_File_Time']]

@@ -23,7 +23,7 @@ dag = DAG(
     default_args=default_args,
     description='SIT_PROD_KPIMT_EMAIL_REPORT',
     start_date=datetime(2017, 3, 20),
-    schedule_interval='40 18 * * *',
+    schedule_interval='00 8 7,15 * *',
     catchup=False)
 
 params = {
@@ -33,7 +33,7 @@ params = {
     'reports_archive' : '/data_ext/apps/sit/kpimt/archive/reports/'
 }
 
-send_to = ['ondrej.machacek@external.t-mobile.cz']
+send_to = ['ondrej.machacek@external.t-mobile.cz', 'MKrebs@telekom.de']
 
 
 timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
