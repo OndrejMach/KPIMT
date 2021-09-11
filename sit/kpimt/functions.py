@@ -41,6 +41,8 @@ def get_input_data(file):
             sheet = "Sheet1$"
         elif ("sheet1" in xl.sheet_names):
             sheet = "sheet1"
+        else:
+            return pd.read_excel(file, header=0)
 
         return pd.read_excel(file, header=0, sheet_name=sheet)
 
