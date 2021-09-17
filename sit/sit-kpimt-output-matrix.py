@@ -4,7 +4,7 @@ from kerberos_python_operator import KerberosPythonOperator
 from datetime import datetime
 from sit.classes.SFTP_handler import SFTP_handler
 
-from sit.kpimt.run_processing import run_outputs_processing, run_avg_processing, run_matrix_processing, run_multimarket, run_ims
+from sit.kpimt.run_processing import run_outputs_processing, run_avg_processing, run_matrix_processing, run_multimarket, run_ims, run_facts_processing
 
 #from sit.classes.SFTP_handler import SFTP_handler
 
@@ -38,7 +38,7 @@ params = {
     'ims_archive': "/data_ext/apps/sit/kpimt/archive/input/IMS/"
 }
 files_to_deliver = ["Corrections.csv","COSGRE_Matrix_monthly.csv","COSGRE_Matrix_weekly.csv",
-                    "COSROM_Matrix_monthly.csv","COSROM_Matrix_weekly.csv",
+                    "COSROM_Matrix_monthly.csv","COSROM_Matrix_weekly.csv","facts.csv",
                     "IMS_facts.csv","TMA_Matrix_daily.csv","TMA_Matrix_monthly.csv","TMA_Matrix_weekly.csv",
                     "TMA_monthly_averages_from_daily_input.csv","TMCG_Matrix_monthly.csv","TMCG_Matrix_weekly.csv",
                     "TMCZ_Matrix_daily.csv","TMCZ_Matrix_monthly.csv","TMCZ_Matrix_weekly.csv","TMCZ_monthly_averages_from_daily_input.csv",
@@ -98,6 +98,10 @@ def matrix_processing():
         print("running matrix processing")
         run_matrix_processing(natco=natco, params=params)
 
+def run_facts():
+    run_facts_processing(kpis_path=params['kpis_path'], output_path=params['output_path'])
+
+
 
 process_files = KerberosPythonOperator(
         task_id='process_files',
@@ -123,6 +127,12 @@ process_ims = KerberosPythonOperator(
         dag=dag
     )
 
+process_facts = KerberosPythonOperator(
+        task_id='process_facts',
+        python_callable=run_facts,
+        dag=dag
+    )
+
 upload_results = KerberosPythonOperator(
         task_id='upload_results',
         python_callable=upload_qs,
@@ -133,4 +143,4 @@ input_archive = BashOperator(task_id='archive_input', bash_command=input_backup,
 output_archive = BashOperator(task_id='archive_output', bash_command=backup_command, dag=dag)
 
 
-input_archive >> output_archive >> process_files >> process_multimarket >>process_matrices >> process_ims >>upload_results
+input_archive >> output_archive >> process_files >> process_multimarket >>process_matrices >> process_ims >> process_facts >>upload_results

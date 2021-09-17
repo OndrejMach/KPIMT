@@ -22,7 +22,7 @@ class IMS_processing:
         input['Date'] = input['Date'].apply(lambda x: get_date(x))
         input['KPI name'] = input['KPI name'].apply(lambda x: str(x).upper())
         input['Input_ID'] = None
-        input.apply(lambda row: get_input_id(row), axis=1)
+        input = input.apply(lambda row: get_input_id(row), axis=1)
 
         return input
 

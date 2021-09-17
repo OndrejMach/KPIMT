@@ -1,3 +1,4 @@
+import csv
 import os
 
 import pandas as pd
@@ -13,6 +14,7 @@ from sit.kpimt.Multimarket import Multimarket
 from sit.kpimt.functions import get_file_timestamp
 from sit.kpimt.IMS_processing import IMS_processing
 from sit.kpimt.KPI_Report import KPI_Report
+from sit.kpimt.Facts import Facts
 from datetime import  datetime
 
 
@@ -22,7 +24,7 @@ params = {
     "kpis_path": "/Users/ondrejmachacek/tmp/KPI/kpi_request/",
     "correnctions_path": "/Users/ondrejmachacek/tmp/KPI/correction/",
     'basepath': "/Users/ondrejmachacek/tmp/KPI/input",
-    "output_path": "/Users/ondrejmachacek/tmp/KPI/output/",
+    "output_path": "/Users/ondrejmachacek/tmp/KPI/out_ref/",
     'multimarket': "/Users/ondrejmachacek/tmp/KPI/multimarket/",
     'multimarket_archive': "/Users/ondrejmachacek/tmp/KPI/multimarket/",
     'ims_path' : "/Users/ondrejmachacek/tmp/KPI/IMS",
@@ -165,7 +167,23 @@ def generate_report(kpis_path, matrix_path, reports_path):
             print("FILE: "+filename +" does not exist!!")
 
 
+def run_facts_processing(kpis_path, output_path):
+    kpis = pd.read_excel(kpis_path + "/DTAG-KPI-formular_database-master.xlsx", header=1,
+                         sheet_name='PM-data-base')
+    all_files = glob(output_path + "*_weekly.csv")
+    li = []
+    for filename in all_files:
+        print("Reading: "+filename)
+        df = pd.read_csv(filename, index_col=None, header=0, delimiter="|")
+        li.append(df)
 
+    weekly_data = pd.concat(li, axis=0, ignore_index=True)
+    ims_path = output_path + "/IMS_facts.csv"
+    ims = pd.read_csv(ims_path, index_col=None, header=0, delimiter="|")
+    facts = Facts(all_weekly_data=weekly_data, kpis=kpis, ims_data=ims)
+
+    result = facts.process_data()
+    result.to_csv(output_path + "/facts.csv", sep="|", index=False, quoting=csv.QUOTE_ALL)
 
 
 
@@ -179,7 +197,7 @@ if __name__ == '__main__':
     #run_multimarket(params)
     #print(float(0,5))
     #run_ims(params)
-    generate_report(kpis_path = params['kpis_path'], matrix_path=params['output_path']+"/Matrix/", reports_path=params['reports_path'])
-
+    #generate_report(kpis_path = params['kpis_path'], matrix_path=params['output_path']+"/Matrix/", reports_path=params['reports_path'])
+    run_facts_processing(kpis_path=params['kpis_path'], output_path=params['output_path'])
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
