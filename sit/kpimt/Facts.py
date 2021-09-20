@@ -36,7 +36,8 @@ class Facts:
         joined = pd.merge(weekly_all, kpi_input_filtered, on='KPI name')
         joined['dummi'] = '1'
         joined = joined[((joined['PM Report'] == 'Y') | (joined['PM Report'] == 'y')) & ((pd.notna(joined['%SVKPI_Key']))) & (joined['%SVKPI_Key'] != '--')]
-        result = joined[['Date', 'KPI name', 'Value', 'Region', 'Input_ID', 'Vendor', 'Service', 'Units', 'Polarity', '%SVKPI_Key']]
+        result = joined[['Date', 'KPI name', 'Value', 'Region', 'Input_ID', 'Vendor', 'Service', 'Units', 'Polarity', '%SVKPI_Key','PM Report']]
+        result.rename(columns={'KPI name' : 'Kpi name'}, inplace=True)
 
 
         print(result.columns)
