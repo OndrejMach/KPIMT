@@ -33,7 +33,20 @@ params = {
     'reports_archive' : '/data_ext/apps/sit/kpimt/archive/reports/'
 }
 
-send_to = ['ondrej.machacek@external.t-mobile.cz', 'MKrebs@telekom.de']
+send_to = {
+    #"all" : ['ondrej.machacek@external.t-mobile.cz', 'MKrebs@telekom.de'],
+    "TMA"  : ['ondrej.machacek@external.t-mobile.cz','MKrebs@telekom.de',  'Karl.Hevera@magenta.at'],
+    "TMCG"  : ['ondrej.machacek@external.t-mobile.cz','MKrebs@telekom.de',  'nela.slavic@telekom.me'],
+    "TMCZ" : ['ondrej.machacek@external.t-mobile.cz', 'MKrebs@telekom.de', 'pavel.hornicek@t-mobile.cz'],
+    "COSGRE" : ['ondrej.machacek@external.t-mobile.cz', 'MKrebs@telekom.de', 'fkyriazid@cosmote.gr'],
+    "TMHR" : ['ondrej.machacek@external.t-mobile.cz','MKrebs@telekom.de',  'krunoslav.smoljak@t.ht.hr'],
+    "TMHU" : ['ondrej.machacek@external.t-mobile.cz', 'MKrebs@telekom.de', 'kenesei.tibor@telekom.hu'],
+    "TMMK" : ['ondrej.machacek@external.t-mobile.cz','MKrebs@telekom.de',  'Marko.Luevski@telekom.mk'],
+    "TMNL" : ['ondrej.machacek@external.t-mobile.cz','MKrebs@telekom.de',  'Joost-Jelle.Oudemans@t-mobile.nl'],
+    "TMPL" : ['ondrej.machacek@external.t-mobile.cz', 'MKrebs@telekom.de', 'Adam.Stryjewski@external.t-mobile.pl'],
+    "COSROM" : ['ondrej.machacek@external.t-mobile.cz', 'MKrebs@telekom.de', 'tiberiu.lica@telekom.ro'],
+    "TMSK" : ['ondrej.machacek@external.t-mobile.cz', 'MKrebs@telekom.de', 'ladislav.manko@telekom.sk']
+}
 
 
 timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
@@ -47,15 +60,17 @@ def create_report():
 
 def build_email(**context):
     onlyfiles = [join(params['reports_path'], f) for f in listdir(params['reports_path']) if isfile(join(params['reports_path'], f))]
-
-    email_op = EmailOperator(
-        task_id='send_email',
-        to=send_to,
-        subject="KPI REPORT",
-        html_content=None,
-        files=onlyfiles,
-    )
-    email_op.execute(context)
+    for natco in send_to:
+        files = [f for f in onlyfiles if natco in f]
+        if (len(files) >0):
+            email_op = EmailOperator(
+                task_id='send_email',
+                to=send_to[natco],
+                subject="KPI REPORT for "+natco,
+                html_content=None,
+                files=files,
+            )
+            email_op.execute(context)
 
 
 do_report = KerberosPythonOperator(
