@@ -16,7 +16,7 @@ from sit.kpimt.IMS_processing import IMS_processing
 from sit.kpimt.KPI_Report import KPI_Report
 from sit.kpimt.Facts import Facts
 from datetime import  datetime
-
+from sit.kpimt.functions import get_path, get_files, get_input_data, get_file_timestamp
 
 
 
@@ -188,7 +188,6 @@ def run_facts_processing(kpis_path, output_path):
 
 
 
-
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     #run_outputs_processing("COSGRE", 'weekly_input', params)
@@ -198,6 +197,11 @@ if __name__ == '__main__':
     #print(float(0,5))
     #run_ims(params)
     #generate_report(kpis_path = params['kpis_path'], matrix_path=params['output_path']+"/Matrix/", reports_path=params['reports_path'])
-    run_facts_processing(kpis_path=params['kpis_path'], output_path=params['output_path'])
+    #run_facts_processing(kpis_path=params['kpis_path'], output_path=params['output_path'])
+    #input_data = get_input_data("/Users/ondrejmachacek/tmp/KPI/daily/TMPL.IPQM_SERVICE_KPI.DAY.20211011140001.csv")
+    #print(input_data.info())
+    print("DONE")
+
+
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

@@ -6,7 +6,7 @@ from os.path import isfile, join
 import pandas as pd
 
 from sit.kpimt.confs import paths
-from sit.kpimt.structures import daily_raw_header
+from sit.kpimt.structures import daily_raw_header_at, daily_raw_header
 
 
 def get_files(path):
@@ -26,7 +26,10 @@ def get_file_timestamp(file_path):
 def get_input_data(file):
     if (str(file).endswith(".csv")):
         if ("daily" in str(file)):
-            return pd.read_csv(file,delimiter='|', header=None, names=daily_raw_header)
+            if ("TMA" in str(file)):
+                return pd.read_csv(file,delimiter='|', header=None, names=daily_raw_header_at, dtype="string")
+            else:
+                return pd.read_csv(file, delimiter='|', header=None, names=daily_raw_header, dtype="string")
         elif ("monthly" in str(file)):
             return pd.read_csv(file, delimiter='|', header=0)
         elif ("weekly" in str(file) and "TMHU" in str(file)):
