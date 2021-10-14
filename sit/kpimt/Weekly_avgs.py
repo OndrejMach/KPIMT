@@ -31,7 +31,7 @@ class Weekly_avgs:
                 return None
 
         def get_input_id(row):
-            row['Input_ID'] = "{}-{}-{}-d".format(row['Region'], row['KPI name'], row['Date'])
+            row['Input_ID'] = "{}-{}-{}-w".format(row['Region'], row['KPI name'], row['Date'])
             return row
 
         kpis_map = self.kpis.drop_duplicates()
