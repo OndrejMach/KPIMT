@@ -6,7 +6,7 @@ from os.path import isfile, join
 import pandas as pd
 
 from sit.kpimt.confs import paths
-from sit.kpimt.structures import daily_raw_header_at, daily_raw_header
+from sit.kpimt.structures import daily_raw_header_at, daily_raw_header,weekly_header_cosrom
 
 
 def get_files(path):
@@ -32,8 +32,8 @@ def get_input_data(file):
                 return pd.read_csv(file, delimiter='|', header=None, names=daily_raw_header, dtype="string")
         elif ("monthly" in str(file)):
             return pd.read_csv(file, delimiter='|', header=0)
-        elif ("weekly" in str(file) and "TMHU" in str(file)):
-            return pd.read_csv(file, delimiter='|', header=0)
+        elif ("weekly" in str(file) and (("TMHU" in str(file)) or ('COSROM')in str(file))):
+            return pd.read_csv(file, delimiter='|', header=0,dtype="string")
 
     if (str(file).endswith("xls") or str(file).endswith("xlsx")):
         xl = pd.ExcelFile(file)

@@ -17,6 +17,7 @@ from sit.kpimt.KPI_Report import KPI_Report
 from sit.kpimt.Facts import Facts
 from datetime import  datetime
 from sit.kpimt.functions import get_path, get_files, get_input_data, get_file_timestamp
+import re
 
 
 
@@ -200,7 +201,8 @@ if __name__ == '__main__':
     #run_facts_processing(kpis_path=params['kpis_path'], output_path=params['output_path'])
     #input_data = get_input_data("/Users/ondrejmachacek/tmp/KPI/daily/TMPL.IPQM_SERVICE_KPI.DAY.20211011140001.csv")
     #print(input_data.info())
-    print("DONE")
+    if (re.match("\d{2}\-\w{3}\-\d{2}", "29-JUN-84")):
+        print("DONE")
 
 
 

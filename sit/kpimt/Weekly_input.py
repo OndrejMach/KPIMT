@@ -31,7 +31,13 @@ class Weekly_input:
             return row
         def get_date(date):
             date_f = str(date).split(sep=" ")[0]
-            date_format = "%d.%m.%Y" if (re.match("\d{2}.\d{2}.\d{4}", date_f)) else "%Y-%m-%d"
+            date_format = "%d.%m.%Y"
+            if (re.match("\d{2}\.\d{2}\.\d{4}", date_f)):
+                date_format = "%d.%m.%Y"
+            elif (re.match("\d{2}\-\w{3}\-\d{2}", date_f)):
+                date_format ="%d-%b-%y"
+            else:
+                date_format="%Y-%m-%d"
             return datetime.strptime(date_f, date_format).strftime("%d.%m.%Y")
 
         input =self.raw_input[(self.raw_input['Value'].notna())].copy()
