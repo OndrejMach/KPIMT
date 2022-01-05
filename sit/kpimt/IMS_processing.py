@@ -24,7 +24,7 @@ class IMS_processing:
         input['Input_ID'] = None
         input = input.apply(lambda row: get_input_id(row), axis=1)
 
-        return input
+        return input[['Date', 'KPI name', 'Value','Region', 'Input_ID']]
 
 
 
