@@ -16,7 +16,8 @@ for filename in all_files:
     print("PROCESSING FILENAME " + filename)
     ims_input_data = pd.read_excel(filename, header=0)
     data = IMS_processing(ims_data=ims_input_data).process_data()
-    data.to_csv("/Users/ondrejmachacek/tmp/KPI/IMS/IMS_facts.csv", sep="|", index=False, mode='a')
+    with open('/Users/ondrejmachacek/tmp/KPI/IMS/IMS_facts.csv', 'a') as f:
+        data.to_csv(f, sep="|", index=False, mode='a', header=f.tell() == 0)
 
 #print(data.info)
 

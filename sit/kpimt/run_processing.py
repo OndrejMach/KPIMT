@@ -135,7 +135,8 @@ def run_ims(params):
         print("PROCESSING FILENAME " + filename)
         ims_input_data = pd.read_excel(filename, header=0)
         data = IMS_processing(ims_data=ims_input_data).process_data()
-        data.to_csv(params['output_path']+"/IMS_facts.csv", sep="|", index=False, mode='a')
+        with open(params['output_path']+"/IMS_facts.csv", 'a') as f:
+            data.to_csv(f, sep="|", index=False, mode='a', header=f.tell()==0)
         os.rename(filename, params['ims_archive']+"/"+path.basename(filename)+"_"+datetime.now().strftime('%Y%m%d%H%M%S'))
 
 
