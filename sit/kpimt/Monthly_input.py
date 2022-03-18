@@ -36,8 +36,9 @@ class Monthly_input:
             return datetime.strptime(date_f, date_format).strftime("%d.%m.%Y")
 
 
-
-        input =self.raw_input[(self.raw_input['Value'].notna())].copy()
+        #KPI name
+        input = self.raw_input[(self.raw_input['Value'].notna())].copy()
+        input =input[(input['KPI name'].notna())].copy()
         input['DatumKPI'] = input['Date'].map(lambda x: get_date(x))
         input['Natco'] = self.natco
         input['Region'] = self.natco
