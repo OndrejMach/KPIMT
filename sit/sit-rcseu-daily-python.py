@@ -10,6 +10,7 @@ import gzip
 
 
 default_args = {
+    'queue': 'SIT_Queue',
     'owner': 'kr_prod_airflow_operation_ewhr',
     'run_as_user': 'talend_ewhr',
     'start_date': datetime(2020, 2, 18),
@@ -64,7 +65,7 @@ outputYesterdayMonth=update_processing_date.strftime('%Y%m')   #$(date -d "3 day
 appFile='ignite-1.0-all.jar'
 
 spark_submit_template = ('/opt/cloudera/parcels/CDH/lib/spark/bin/spark-submit --master yarn --queue root.ewhr_technical ' 
-'--deploy-mode client --num-executors 48 --executor-cores 8 \--executor-memory 20G '
+'--deploy-mode cluster --num-executors 24 --executor-cores 8 \--executor-memory 20G '
 '--driver-memory 20G --conf spark.dynamicAllocation.enabled=false '
 '--driver-java-options "-Dlog4j.configuration=file:/data_ext/apps/sit/rcseu/conf/log4j.custom.properties" '
 '--class "com.tmobile.sit.ignite.rcseu.Application" {}/{} {} {} {}')
@@ -121,9 +122,10 @@ def run_yearly_processing(**context):
         bash_op = BashOperator(task_id='run_spark',bash_command=spark_submit_cmd)
         bash_op.execute(context)
 
+#hdfs dfs -get -f $hdfsStageFolder/User_agents.csv $edgeOutputFolder/
 
 hdfs_put_cmd = 'hdfs dfs -put -f {}/*{}*.gz {}'.format(edgeInputFolder, runDate, hdfsArchiveFolder)
-get_outputs_cmd = 'hdfs dfs -get -f {}/*.csv {}/'.format(hdfsOutputFolder,edgeOutputFolder)  # hdfs dfs -get -f $hdfsOutputFolder/activity*daily*${outputYesterday}.csv $edgeOutputFolder/
+get_outputs_cmd = 'hdfs dfs -get -f {}/User_agents.csv {} && hdfs dfs -get -f {}/*.csv {}/'.format(hdfsStageFolder,edgeOutputFolder,hdfsOutputFolder,edgeOutputFolder)  # hdfs dfs -get -f $hdfsOutputFolder/activity*daily*${outputYesterday}.csv $edgeOutputFolder/
 send_outputs_cmd = 'scp {}/*.csv {}'.format(edgeOutputFolder,QS_remote)  #scp $edgeOutputFolder/activity*daily*${outputYesterday}.csv cdrs@10.105.180.206:/RCS-EU/PROD/
 ### CLEANUP CMDs
 archive_agents_cmd = 'hdfs dfs -cp -f {}/User_agents.csv {}/User_agents.{}.csv'.format(hdfsStageFolder,hdfsOutputArchiveFolder,runDate)

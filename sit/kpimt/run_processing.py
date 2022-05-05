@@ -143,6 +143,8 @@ def run_ims(params):
 def generate_report(kpis_path, matrix_path, reports_path):
     kpis = pd.read_excel(kpis_path + "/DTAG-KPI-formular_database-master.xlsx", header=1,
                          sheet_name='PM-data-base')
+    mappings = pd.read_excel(kpis_path + "/DTAG-KPI-formular_Report_Mapping_database_master.xlsx",
+                             header=1,sheet_name='Tabelle1')
     natcos_for_report = [f for f in natcos if f not in ['TMD', 'AMC']]
     for natco in natcos_for_report:
         filename = '{}/{}_Matrix_monthly.csv'.format(matrix_path, natco)
@@ -151,7 +153,7 @@ def generate_report(kpis_path, matrix_path, reports_path):
             print("PROCESSING FILE: "+filename)
             monthly_matrix = pd.read_csv(filename, delimiter='|', header=0, dtype=str)
 
-            data = KPI_Report(kpis=kpis, matrix_monthly=monthly_matrix, natco= natco).process_data()
+            data = KPI_Report(kpis=kpis, matrix_monthly=monthly_matrix, natco= natco, mappings=mappings).process_data()
             output_filename= reports_path + "/KPILoadAndStatusMonitor_"+natco+".xlsx"
             writer = pd.ExcelWriter(output_filename)
             data.to_excel(writer, sheet_name='sheet1', index=False, na_rep='NaN')
@@ -192,6 +194,10 @@ def run_facts_processing(kpis_path, output_path):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
+    mappings = pd.read_excel('/Users/ondrejmachacek/tmp/KPI' + "/DTAG-KPI-formular_Report_Mapping_database_master.xlsx", header=1,
+                         sheet_name='Tabelle1')
+
+    thresholds = mappings[["EDWH KPI_ID","Threshold"]]
     #run_outputs_processing("COSGRE", 'weekly_input', params)
     #kpis = KPI_reader(params['kpis_path']).read_data()
     #run_matrix_processing("TMA", params)
@@ -202,8 +208,9 @@ if __name__ == '__main__':
     #run_facts_processing(kpis_path=params['kpis_path'], output_path=params['output_path'])
     #input_data = get_input_data("/Users/ondrejmachacek/tmp/KPI/daily/TMPL.IPQM_SERVICE_KPI.DAY.20211011140001.csv")
     #print(input_data.info())
-    if (re.match("\d{2}\-\w{3}\-\d{2}", "29-JUN-84")):
-        print("DONE")
+    #if (re.match("\d{2}\-\w{3}\-\d{2}", "29-JUN-84")):
+    #    print("DONE")
+
 
 
 

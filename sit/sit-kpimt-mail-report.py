@@ -1,7 +1,7 @@
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from kerberos_python_operator import KerberosPythonOperator
-from datetime import datetime
+from datetime import datetime, timedelta
 from sit.classes.SFTP_handler import SFTP_handler
 from airflow.operators.email_operator import EmailOperator
 from sit.kpimt.run_processing import generate_report
