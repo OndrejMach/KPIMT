@@ -10,14 +10,12 @@ from Facts import Facts
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_colwidth', None)
 
+natcos_to_process = ['cg', 'cr', 'mk', 'mt', 'st', 'tp', 'tc']
+pending_files = []
+for natco in natcos_to_process:
+    for type in ['activity', 'provision', 'register_requests']:
+        pending_files += glob('/Users/ondrejmachacek/tmp/KPI/IMS/' + "/*.xlsx")
 
-all_files = glob('/Users/ondrejmachacek/tmp/KPI/IMS/' + "/*.xlsx")
-for filename in all_files:
-    print("PROCESSING FILENAME " + filename)
-    ims_input_data = pd.read_excel(filename, header=0)
-    data = IMS_processing(ims_data=ims_input_data).process_data()
-    with open('/Users/ondrejmachacek/tmp/KPI/IMS/IMS_facts.csv', 'a') as f:
-        data.to_csv(f, sep="|", index=False, mode='a', header=f.tell() == 0)
 
 #print(data.info)
 

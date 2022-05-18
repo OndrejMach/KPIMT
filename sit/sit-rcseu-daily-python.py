@@ -24,7 +24,7 @@ dag = DAG(
     default_args=default_args,
     description='SIT_PROD_RCSEU_DAILY_PYTHON',
     start_date=datetime(2017, 3, 20),
-    schedule_interval = '40 5 * * *',
+    schedule_interval = '40 6 * * *',
     catchup=False)
 
 ########################## CONFIGURATION ##########################
@@ -46,6 +46,7 @@ jobFolder='/data_ext/apps/sit/rcseu'
 regular_processing_date = datetime.today() - timedelta(days=2)
 update_processing_date = datetime.today() - timedelta(days=3)
 missing_file_notification = ['ondrej.machacek@open-bean.com','sit-support@t-mobile.cz']
+pending_file_notification = ['ondrej.machacek@open-bean.com']
 natcos_to_check = ['tp', 'tc']
 natcos_to_process = ['cg', 'cr', 'mk', 'mt', 'st', 'tp', 'tc']
 QS_remote = 'cdrs@10.105.180.206:/RCS-EU/PROD/'
@@ -91,6 +92,21 @@ def file_check(**context):
                 )
                 email_op.execute(context)
 
+def check_pending(**context):
+    pending_files = []
+    for natco in natcos_to_process:
+        for type in ['activity','provision','register_requests']:
+            pending_files += glob('{}/{}/{}_*.csv_{}.csv'.format(edgeLandingZone, natco,type,natco))  #'$edgeLandingZone/tp/register_requests_2022-03-16.csv_mt.csv'
+
+    if ( not pending_files):
+        email_op = EmailOperator(
+            task_id='send_email',
+            to=pending_file_notification,
+            subject="pending files report ",
+            html_content='pending files list: '+', '.join([str(x) for x in pending_files]) ,
+            files=None,
+        )
+        email_op.execute(context)
 
 def copy_files(**context):
     for natco in natcos_to_process:
@@ -143,6 +159,13 @@ check_files = KerberosPythonOperator(
     dag=dag
 )
 
+check_pending_files = KerberosPythonOperator(
+    task_id='check_pending_files',
+    python_callable=check_pending,
+    dag=dag
+)
+
+
 copy_files_to_input = KerberosPythonOperator(
     task_id='copy_files',
     python_callable=copy_files,
@@ -176,7 +199,7 @@ send_outputs = BashOperator(task_id='send_outputs', bash_command=send_outputs_cm
 cleanup = BashOperator(task_id='cleanup', bash_command=overall_cleanup_cmd, dag=dag)
 
 
-check_files >> copy_files_to_input >> put_to_archive >> update_processing >> daily_processing >> yearly_processing >>get_outputs >> send_outputs >>cleanup
+check_files >> copy_files_to_input >> put_to_archive >> update_processing >> daily_processing >> yearly_processing >>get_outputs >> send_outputs >>cleanup >> check_pending_files
 
 
 #get_source_files = KerberosBashOperator(task_id='get_source_files', bash_command='/data_ext/apps/sit/rcseu/0-PutToHDFS.sh ', dag=dag)
