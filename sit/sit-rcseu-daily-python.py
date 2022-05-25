@@ -1,3 +1,5 @@
+import os
+
 from airflow import DAG
 from datetime import datetime, timedelta
 from kerberos_python_operator import KerberosPythonOperator
@@ -7,6 +9,7 @@ from airflow.operators.email_operator import EmailOperator
 import shutil
 import glob
 import gzip
+import re
 
 
 default_args = {
@@ -15,7 +18,7 @@ default_args = {
     'run_as_user': 'talend_ewhr',
     'start_date': datetime(2020, 2, 18),
     'retries': 0,
-    'email': ['ondrej.machacek@external.t-mobile.cz'], #'q6o7a8w0b9u9x3b4@sit-cz.slack.com'
+    'email': ['ondrej.machacek@open-bean.com', 'ondrej.machacek@external.t-mobile.cz','sit-support@t-mobile.cz','a5f84da9.tmst365.onmicrosoft.com@emea.teams.ms'], #'q6o7a8w0b9u9x3b4@sit-cz.slack.com'
     'email_on_failure': True
 }
 
@@ -45,10 +48,11 @@ hdfsStageFolder='/data/sit/rcseu/stage'
 jobFolder='/data_ext/apps/sit/rcseu'
 regular_processing_date = datetime.today() - timedelta(days=2)
 update_processing_date = datetime.today() - timedelta(days=3)
-missing_file_notification = ['ondrej.machacek@open-bean.com','sit-support@t-mobile.cz']
-pending_file_notification = ['ondrej.machacek@open-bean.com']
+missing_file_notification = ['ondrej.machacek@open-bean.com','sit-support@t-mobile.cz','a5f84da9.tmst365.onmicrosoft.com@emea.teams.ms']
+pending_file_notification = ['ondrej.machacek@open-bean.com','sit-support@t-mobile.cz','a5f84da9.tmst365.onmicrosoft.com@emea.teams.ms']
 natcos_to_check = ['tp', 'tc']
 natcos_to_process = ['cg', 'cr', 'mk', 'mt', 'st', 'tp', 'tc']
+#natcos_to_process = [ 'tp']
 QS_remote = 'cdrs@10.105.180.206:/RCS-EU/PROD/'
 ########################## END CONFIGURATION ##########################
 
@@ -72,6 +76,19 @@ spark_submit_template = ('/opt/cloudera/parcels/CDH/lib/spark/bin/spark-submit -
 '--class "com.tmobile.sit.ignite.rcseu.Application" {}/{} {} {} {}')
 
 
+hdfs_put_cmd = 'hdfs dfs -put -f {}/*{}*.gz {}'.format(edgeInputFolder, runDate, hdfsArchiveFolder)
+get_outputs_cmd = 'hdfs dfs -get -f {}/User_agents.csv {} && hdfs dfs -get -f {}/*.csv {}/'.format(hdfsStageFolder,edgeOutputFolder,hdfsOutputFolder,edgeOutputFolder)  # hdfs dfs -get -f $hdfsOutputFolder/activity*daily*${outputYesterday}.csv $edgeOutputFolder/
+send_outputs_cmd = 'scp {}/*.csv {}'.format(edgeOutputFolder,QS_remote)  #scp $edgeOutputFolder/activity*daily*${outputYesterday}.csv cdrs@10.105.180.206:/RCS-EU/PROD/
+### CLEANUP CMDs
+archive_agents_cmd = 'hdfs dfs -cp -f {}/User_agents.csv {}/User_agents.{}.csv'.format(hdfsStageFolder,hdfsOutputArchiveFolder,runDate)
+archive_outputs_cmd = 'hdfs dfs -cp -f {}/*.* {}/'.format(hdfsOutputFolder,hdfsOutputArchiveFolder )
+delete_hdfs_output_cmd = 'hdfs dfs -rm {}/*.*'.format(hdfsOutputFolder)
+delete_edge_output_cmd = 'rm {}/*.*'.format(edgeOutputFolder)
+delete_edge_input_cmd = 'rm {}/*.gz'.format(edgeInputFolder)
+
+overall_cleanup_cmd = archive_agents_cmd + ' && ' + archive_outputs_cmd + ' && ' + delete_hdfs_output_cmd + ' && ' + delete_edge_output_cmd + ' && ' + delete_edge_input_cmd
+
+
 def gzip_file(file):
     with open(file, 'rb') as f_in, gzip.open(file+'.gz', 'wb') as f_out:
         f_out.writelines(f_in)
@@ -92,13 +109,20 @@ def file_check(**context):
                 )
                 email_op.execute(context)
 
+def get_files(natco):
+    pending_files = []
+    for type in ['activity', 'provision', 'register_requests']:
+        file = glob.glob('{}/{}/{}_*.csv_{}.csv'.format(edgeLandingZone, natco, type, natco))
+        pending_files += file  # '$edgeLandingZone/tp/register_requests_2022-03-16.csv_mt.csv'
+    return pending_files
+
 def check_pending(**context):
     pending_files = []
     for natco in natcos_to_process:
-        for type in ['activity','provision','register_requests']:
-            pending_files += glob('{}/{}/{}_*.csv_{}.csv'.format(edgeLandingZone, natco,type,natco))  #'$edgeLandingZone/tp/register_requests_2022-03-16.csv_mt.csv'
+        pending_files += get_files(natco) #'$edgeLandingZone/tp/register_requests_2022-03-16.csv_mt.csv'
 
-    if ( not pending_files):
+    print('found pending files: ' + ', '.join([str(x) for x in pending_files]))
+    if ( pending_files):
         email_op = EmailOperator(
             task_id='send_email',
             to=pending_file_notification,
@@ -107,6 +131,29 @@ def check_pending(**context):
             files=None,
         )
         email_op.execute(context)
+
+def reprocess_pending(**context):
+    natcos_reprocessed = 0
+    for natco in natcos_to_process:
+        pending_files = get_files(natco)
+        dates = set()
+        for file in pending_files:
+            print("Reprocessing pending file: "+file)
+            result = re.search(r"\w+_(\d+-\d+-\d+).csv", file)
+            os.system("gzip {} && hdfs dfs -put -f {}.gz {} && rm {}.gz".format(file, file,hdfsArchiveFolder, file))
+            dates.add(result.group(1))
+        if (dates):
+            natcos_reprocessed+=1
+            for date in dates:
+                print("running reprocessing for natco: " + natco + " date: " + date)
+                date_update = datetime.strptime(date, '%Y-%m-%d') - timedelta(days=1)
+                command = spark_submit_template.format(edgeLibFolder, appFile, date_update.strftime('%Y-%m-%d'), natco,'update')
+                os.system(command)
+                command = spark_submit_template.format(edgeLibFolder, appFile, date, natco,'daily')
+                os.system(command)
+    if (natcos_reprocessed>0):
+        os.system(get_outputs_cmd)
+        os.system(send_outputs_cmd)
 
 def copy_files(**context):
     for natco in natcos_to_process:
@@ -140,17 +187,6 @@ def run_yearly_processing(**context):
 
 #hdfs dfs -get -f $hdfsStageFolder/User_agents.csv $edgeOutputFolder/
 
-hdfs_put_cmd = 'hdfs dfs -put -f {}/*{}*.gz {}'.format(edgeInputFolder, runDate, hdfsArchiveFolder)
-get_outputs_cmd = 'hdfs dfs -get -f {}/User_agents.csv {} && hdfs dfs -get -f {}/*.csv {}/'.format(hdfsStageFolder,edgeOutputFolder,hdfsOutputFolder,edgeOutputFolder)  # hdfs dfs -get -f $hdfsOutputFolder/activity*daily*${outputYesterday}.csv $edgeOutputFolder/
-send_outputs_cmd = 'scp {}/*.csv {}'.format(edgeOutputFolder,QS_remote)  #scp $edgeOutputFolder/activity*daily*${outputYesterday}.csv cdrs@10.105.180.206:/RCS-EU/PROD/
-### CLEANUP CMDs
-archive_agents_cmd = 'hdfs dfs -cp -f {}/User_agents.csv {}/User_agents.{}.csv'.format(hdfsStageFolder,hdfsOutputArchiveFolder,runDate)
-archive_outputs_cmd = 'hdfs dfs -cp -f {}/*.* {}/'.format(hdfsOutputFolder,hdfsOutputArchiveFolder )
-delete_hdfs_output_cmd = 'hdfs dfs -rm {}/*.*'.format(hdfsOutputFolder)
-delete_edge_output_cmd = 'rm {}/*.*'.format(edgeOutputFolder)
-delete_edge_input_cmd = 'rm {}/*.gz'.format(edgeInputFolder)
-
-overall_cleanup_cmd = archive_agents_cmd + ' && ' + archive_outputs_cmd + ' && ' + delete_hdfs_output_cmd + ' && ' + delete_edge_output_cmd + ' && ' + delete_edge_input_cmd
 
 
 check_files = KerberosPythonOperator(
@@ -192,6 +228,11 @@ update_processing = KerberosPythonOperator(
     dag=dag
 )
 
+process_pending_files = KerberosPythonOperator(
+    task_id='reprocess_pending',
+    python_callable=reprocess_pending,
+    dag=dag
+)
 
 
 get_outputs = BashOperator(task_id='get_outputs', bash_command=get_outputs_cmd, dag=dag)
@@ -199,7 +240,7 @@ send_outputs = BashOperator(task_id='send_outputs', bash_command=send_outputs_cm
 cleanup = BashOperator(task_id='cleanup', bash_command=overall_cleanup_cmd, dag=dag)
 
 
-check_files >> copy_files_to_input >> put_to_archive >> update_processing >> daily_processing >> yearly_processing >>get_outputs >> send_outputs >>cleanup >> check_pending_files
+check_files >> copy_files_to_input >> put_to_archive >> update_processing >> daily_processing >> yearly_processing >>get_outputs >> send_outputs >>cleanup >> check_pending_files >> process_pending_files
 
 
 #get_source_files = KerberosBashOperator(task_id='get_source_files', bash_command='/data_ext/apps/sit/rcseu/0-PutToHDFS.sh ', dag=dag)
