@@ -76,7 +76,8 @@ spark_submit_template = ('/opt/cloudera/parcels/CDH/lib/spark/bin/spark-submit -
 '--class "com.tmobile.sit.ignite.rcseu.Application" {}/{} {} {} {}')
 
 
-hdfs_put_cmd = 'hdfs dfs -put -f {}/*{}*.gz {}'.format(edgeInputFolder, runDate, hdfsArchiveFolder)
+#hdfs_put_cmd = 'hdfs dfs -put -f {}/*{}*.gz {}'.format(edgeInputFolder, runDate, hdfsArchiveFolder)
+hdfs_put_cmd = 'echo "Files archiving done"'
 get_outputs_cmd = 'hdfs dfs -get -f {}/User_agents.csv {} && hdfs dfs -get -f {}/*.csv {}/'.format(hdfsStageFolder,edgeOutputFolder,hdfsOutputFolder,edgeOutputFolder)  # hdfs dfs -get -f $hdfsOutputFolder/activity*daily*${outputYesterday}.csv $edgeOutputFolder/
 send_outputs_cmd = 'scp {}/*.csv {}'.format(edgeOutputFolder,QS_remote)  #scp $edgeOutputFolder/activity*daily*${outputYesterday}.csv cdrs@10.105.180.206:/RCS-EU/PROD/
 ### CLEANUP CMDs
@@ -84,9 +85,9 @@ archive_agents_cmd = 'hdfs dfs -cp -f {}/User_agents.csv {}/User_agents.{}.csv'.
 archive_outputs_cmd = 'hdfs dfs -cp -f {}/*.* {}/'.format(hdfsOutputFolder,hdfsOutputArchiveFolder )
 delete_hdfs_output_cmd = 'hdfs dfs -rm {}/*.*'.format(hdfsOutputFolder)
 delete_edge_output_cmd = 'rm {}/*.*'.format(edgeOutputFolder)
-delete_edge_input_cmd = 'rm {}/*.gz'.format(edgeInputFolder)
+#delete_edge_input_cmd = 'rm {}/*.gz'.format(edgeInputFolder)
 
-overall_cleanup_cmd = archive_agents_cmd + ' && ' + archive_outputs_cmd + ' && ' + delete_hdfs_output_cmd + ' && ' + delete_edge_output_cmd + ' && ' + delete_edge_input_cmd
+overall_cleanup_cmd = archive_agents_cmd + ' && ' + archive_outputs_cmd + ' && ' + delete_hdfs_output_cmd + ' && ' + delete_edge_output_cmd #+ ' && ' + delete_edge_input_cmd
 
 
 def gzip_file(file):
@@ -162,10 +163,15 @@ def copy_files(**context):
         filelist = glob.glob(landing_files)
         for single_file in filelist:
             # move file with full paths as shutil.move() parameters
-            shutil.move(single_file, edgeInputFolder+'/')
-        filelistToGzip = glob.glob('{}/*{}*.csv'.format(edgeInputFolder,natco))
-        for input_file in filelistToGzip:
-            gzip_file(input_file)
+            gzip_file(single_file)
+            #shutil.move(single_file, edgeInputFolder+'/')
+            put_to_hdfs_cmd = "hdfs dfs -put -f {} {}".format(single_file+".gz", hdfsArchiveFolder)
+            os.system(put_to_hdfs_cmd)
+            os.remove(single_file+".gz")
+            os.remove(single_file)
+        #filelistToGzip = glob.glob('{}/*{}*.csv'.format(edgeInputFolder,natco))
+        #for input_file in filelistToGzip:
+        #    gzip_file(input_file)
 
 def run_daily_processing(**context):
     for natco in natcos_to_process:
