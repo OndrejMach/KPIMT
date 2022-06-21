@@ -50,8 +50,8 @@ regular_processing_date = datetime.today() - timedelta(days=2)
 update_processing_date = datetime.today() - timedelta(days=3)
 missing_file_notification = ['ondrej.machacek@open-bean.com','sit-support@t-mobile.cz','a5f84da9.tmst365.onmicrosoft.com@emea.teams.ms']
 pending_file_notification = ['ondrej.machacek@open-bean.com','sit-support@t-mobile.cz','a5f84da9.tmst365.onmicrosoft.com@emea.teams.ms']
-natcos_to_check = ['tp', 'tc']
-natcos_to_process = ['cg', 'cr', 'mk', 'mt', 'st', 'tp', 'tc']
+natcos_to_check = ['tp', 'tc', 'td' ]
+natcos_to_process = ['cg', 'cr', 'mk', 'mt', 'st', 'tp', 'tc','td']
 #natcos_to_process = [ 'tp']
 QS_remote = 'cdrs@10.105.180.206:/RCS-EU/PROD/'
 ########################## END CONFIGURATION ##########################
