@@ -6,6 +6,8 @@ from kerberos_python_operator import KerberosPythonOperator
 from airflow.operators.bash_operator import BashOperator
 from os import path
 from airflow.operators.email_operator import EmailOperator
+from airflow.operators.dummy import DummyOperator
+from airflow.operators.python import BranchPythonOperator
 import shutil
 import glob
 import gzip
@@ -48,9 +50,10 @@ hdfsStageFolder='/data/sit/rcseu/stage'
 jobFolder='/data_ext/apps/sit/rcseu'
 regular_processing_date = datetime.today() - timedelta(days=2)
 update_processing_date = datetime.today() - timedelta(days=3)
-missing_file_notification = ['ondrej.machacek@open-bean.com','sit-support@t-mobile.cz','a5f84da9.tmst365.onmicrosoft.com@emea.teams.ms']
+missing_file_notification = ['ondrej.machacek@open-bean.com']#,'sit-support@t-mobile.cz','a5f84da9.tmst365.onmicrosoft.com@emea.teams.ms']
 pending_file_notification = ['ondrej.machacek@open-bean.com','sit-support@t-mobile.cz','a5f84da9.tmst365.onmicrosoft.com@emea.teams.ms']
 natcos_to_check = ['tp', 'tc', 'td' ]
+stable_natcos=['cg', 'cr', 'mk', 'mt', 'st']
 natcos_to_process = ['cg', 'cr', 'mk', 'mt', 'st', 'tp', 'tc','td']
 #natcos_to_process = [ 'tp']
 QS_remote = 'cdrs@10.105.180.206:/RCS-EU/PROD/'
@@ -70,8 +73,8 @@ outputYesterdayMonth=update_processing_date.strftime('%Y%m')   #$(date -d "3 day
 appFile='ignite-1.0-all.jar'
 
 spark_submit_template = ('/opt/cloudera/parcels/CDH/lib/spark/bin/spark-submit --master yarn --queue root.ewhr_technical ' 
-'--deploy-mode cluster --num-executors 24 --executor-cores 8 \--executor-memory 20G '
-'--driver-memory 20G --conf spark.dynamicAllocation.enabled=false '
+'--deploy-mode cluster --num-executors 24 --executor-cores 8 --executor-memory 32G '
+'--driver-memory 32G --conf spark.dynamicAllocation.enabled=false --conf spark.shuffle.memoryFraction=0 '
 '--driver-java-options "-Dlog4j.configuration=file:/data_ext/apps/sit/rcseu/conf/log4j.custom.properties" '
 '--class "com.tmobile.sit.ignite.rcseu.Application" {}/{} {} {} {}')
 
@@ -94,6 +97,29 @@ def gzip_file(file):
     with open(file, 'rb') as f_in, gzip.open(file+'.gz', 'wb') as f_out:
         f_out.writelines(f_in)
 
+def check_valid_input(**context):
+    complete = True
+    body = ""
+    for natco in stable_natcos:
+        for type in ['activity','provision','register_requests']:
+            file = '{}/{}/{}_{}.csv_{}.csv'.format(edgeLandingZone, natco,type,runDate,natco)  #'$edgeLandingZone/tp/register_requests_2022-03-16.csv_mt.csv'
+            if ( not path.exists(file)):
+                complete = False
+                body = body + type + ' file for ' + natco + " has not been delivered <br>"
+    if (not complete):
+        email_op = EmailOperator(
+            task_id='send_email',
+            to=missing_file_notification,
+            subject="Input validity check for RCS-EU has FAILED",
+            html_content=body,
+            files=None,
+        )
+        email_op.execute(context)
+        return "terminate"
+    else:
+        return "check_files"
+
+
 def file_check(**context):
     for natco in natcos_to_check:
         for type in ['activity','provision','register_requests']:
@@ -104,7 +130,7 @@ def file_check(**context):
                 email_op = EmailOperator(
                     task_id='send_email',
                     to=missing_file_notification,
-                    subject="missing file report " + natco,
+                    subject="Missing file report " + natco,
                     html_content=type + ' file for ' + natco + ' has not been delivered' ,
                     files=None,
                 )
@@ -127,7 +153,7 @@ def check_pending(**context):
         email_op = EmailOperator(
             task_id='send_email',
             to=pending_file_notification,
-            subject="pending files report ",
+            subject="Pending files report ",
             html_content='pending files list: '+', '.join([str(x) for x in pending_files]) ,
             files=None,
         )
@@ -196,7 +222,7 @@ def run_yearly_processing(**context):
 
 
 check_files = KerberosPythonOperator(
-    task_id='send_email',
+    task_id='check_files',
     python_callable=file_check,
     dag=dag
 )
@@ -240,13 +266,21 @@ process_pending_files = KerberosPythonOperator(
     dag=dag
 )
 
+input_validity_check = BranchPythonOperator(
+    task_id='input_validity_check',
+    python_callable=check_valid_input,
+    dag=dag,
+)
+
+
 
 get_outputs = BashOperator(task_id='get_outputs', bash_command=get_outputs_cmd, dag=dag)
 send_outputs = BashOperator(task_id='send_outputs', bash_command=send_outputs_cmd, dag=dag)
 cleanup = BashOperator(task_id='cleanup', bash_command=overall_cleanup_cmd, dag=dag)
+terminate = DummyOperator(task_id='terminate', dag=dag)
 
-
-check_files >> copy_files_to_input >> put_to_archive >> update_processing >> daily_processing >> yearly_processing >>get_outputs >> send_outputs >>cleanup >> check_pending_files >> process_pending_files
+input_validity_check >> terminate
+input_validity_check >> check_files >> copy_files_to_input >> put_to_archive >> update_processing >> daily_processing >> yearly_processing >>get_outputs >> send_outputs >>cleanup >> check_pending_files >> process_pending_files
 
 
 #get_source_files = KerberosBashOperator(task_id='get_source_files', bash_command='/data_ext/apps/sit/rcseu/0-PutToHDFS.sh ', dag=dag)
