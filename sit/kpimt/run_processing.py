@@ -194,10 +194,13 @@ def run_facts_processing(kpis_path, output_path):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    mappings = pd.read_excel('/Users/ondrejmachacek/tmp/KPI' + "/DTAG-KPI-formular_Report_Mapping_database_master.xlsx", header=1,
-                         sheet_name='Tabelle1')
+    data = get_input_data("/Users/ondrejmachacek/Downloads/PF_Data_2022_05_TMSK.xlsx")
+    #run_outputs_processing()
+    print(data)
+    #mappings = pd.read_excel('/Users/ondrejmachacek/tmp/KPI' + "/DTAG-KPI-formular_Report_Mapping_database_master.xlsx", header=1,
+                         #sheet_name='Tabelle1')
 
-    thresholds = mappings[["EDWH KPI_ID","Threshold"]]
+    #thresholds = mappings[["EDWH KPI_ID","Threshold"]]
     #run_outputs_processing("COSGRE", 'weekly_input', params)
     #kpis = KPI_reader(params['kpis_path']).read_data()
     #run_matrix_processing("TMA", params)

@@ -18,7 +18,7 @@ default_args = {
     'run_as_user': 'talend_ewhr',
     'start_date': datetime(2020, 2, 18),
     'retries': 0,
-    'email': ['ondrej.machacek@open-bean.com'], #, 'ondrej.machacek@external.t-mobile.cz','sit-support@t-mobile.cz','a5f84da9.tmst365.onmicrosoft.com@emea.teams.ms'], #'q6o7a8w0b9u9x3b4@sit-cz.slack.com'
+    'email': ['ondrej.machacek@open-bean.com', 'ondrej.machacek@external.t-mobile.cz','sit-support@t-mobile.cz','a5f84da9.tmst365.onmicrosoft.com@emea.teams.ms'], #'q6o7a8w0b9u9x3b4@sit-cz.slack.com'
     'email_on_failure': True
 }
 
@@ -45,9 +45,10 @@ hdfsInputFolder='/data/sit/rbm/input'
 hdfsArchiveFolder='/data/sit/rbm/archive'
 hdfsStageFolder='/data/sit/rbm/stage'
 
+missing_file_notification = ['ondrej.machacek@open-bean.com','sit-support@t-mobile.cz','a5f84da9.tmst365.onmicrosoft.com@emea.teams.ms']
 jobFolder='/data_ext/apps/sit/rbm'
 regular_processing_date = datetime.today() - timedelta(days=2)
-natcos_to_process = ["cg", "cr",  "mk",  "mt",  "st",  "tc",  "tp"]
+natcos_to_process = ["cg",   "mk",   "st",  "tc",  "tp", "td"]
 #natcos_to_process = [ 'tp']
 QS_remote = 'cdrs@10.105.180.206:/RBM/'
 ########################## END CONFIGURATION ##########################
@@ -90,25 +91,56 @@ def gzip_file(file):
     with open(file, 'rb') as f_in, gzip.open(file+'.gz', 'wb') as f_out:
         f_out.writelines(f_in)
 
+#def backfill_file(processing_date, natco):
+#    files = []
+#    # rbm_billable_events_2022-05-29.csv_cg.csv, rbm_activity_2022-12-24.csv_st.csv
+#    for type in ['rbm_activity', 'rbm_billable_events']:
+#        file = glob.glob('{}/{}/{}_{}.csv_{}.csv'.format(edgeLandingZone, natco, type, processing_date, natco))
+#        files += file  # '$edgeLandingZone/tp/register_requests_2022-03-16.csv_mt.csv'
+#    if (len(files) == 1):
+#        f= ""
+#        if ("rbm_activity" in files[0]):
+#            print("INFO: Billable file missing for date: {},natco: {}  adding an empty one".format(processing_date, natco))
+#            f = "{}/{}/rbm_billable_events_{}.csv_{}.csv.gz".format(edgeLandingZone, natco,processing_date,natco)
+#            shutil.copy("{}/empty_billable.gz".format(jobFolder),f)
+#        if ("rbm_billable_events" in files[0]):
+#            print("INFO: Activity file missing for date: {},natco: {}  adding an empty one".format(processing_date,
+#                                                                                                   natco))
+#            f="{}/{}/rbm_activity_{}.csv_{}.csv.gz".format(edgeLandingZone, natco, processing_date,
+#                                                                         natco)
+#            shutil.copy("{}/empty_activity.gz".format(jobFolder),f)
+#x         os.system("hdfs dfs -put -f {} {} && rm {}".format(f, hdfsInputArchiveFolder, f))
+
 def get_files(natco):
     pending_files = []
-    #rbm_billable_events_2022-05-29.csv_cg.csv
+    result = {}
+    #rbm_billable_events_2022-05-29.csv_cg.csv, rbm_activity_2022-12-24.csv_st.csv
     for type in ['rbm_activity', 'rbm_billable_events']:
-        file = glob.glob('{}/{}/{}_*.csv_{}.csv'.format(edgeLandingZone, natco, type, natco))
+        file = glob.glob('{}/{}/{}_*.csv_{}.csv'.format(edgeLandingZone, natco, type ,natco))
         pending_files += file  # '$edgeLandingZone/tp/register_requests_2022-03-16.csv_mt.csv'
-    return pending_files
+    for file in pending_files:
+        date_search = re.search(r"\w+_(\d+-\d+-\d+).csv", file)
+        date = date_search.group(1)
+        if (date in result.keys()):
+            result[date].append(file)
+        else:
+            result[date] = [file]
+    return result
 
 
 def process_files(**context):
     natcos_reprocessed = 0
+    incomplete_delivery = []
     for natco in natcos_to_process:
-        pending_files = get_files(natco)
+        pending_files = get_files(natco )
         dates = set()
-        for file in pending_files:
-            print("Processing file: "+file)
-            result = re.search(r"\w+_(\d+-\d+-\d+).csv", file)
-            dates.add(result.group(1))
-            os.system("gzip {} && hdfs dfs -put -f {}.gz {} && rm {}.gz".format(file, file,hdfsInputArchiveFolder, file))
+        for date in pending_files.keys():
+            if (len(pending_files[date]) <2):
+                incomplete_delivery.append(pending_files[date][0])
+            else:
+                dates.add(date)
+                for file in pending_files[date]:
+                    os.system("gzip {} && hdfs dfs -put -f {}.gz {} && rm {}.gz".format(file, file,hdfsInputArchiveFolder, file))
         if (dates):
             natcos_reprocessed+=1
             for date in dates:
@@ -118,6 +150,18 @@ def process_files(**context):
     if (natcos_reprocessed>0):
         os.system(get_outputs_cmd)
         os.system(send_outputs_cmd)
+    if (len(incomplete_delivery) > 0):
+        file_list = ""
+        for i in incomplete_delivery:
+            file_list = file_list + i + "<br>"
+        email_op = EmailOperator(
+            task_id='send_email',
+            to=missing_file_notification,
+            subject="Missing file report for RBM",
+            html_content='Incomplete delivery for files (only delivered):<br> '+file_list,
+            files=None,
+        )
+        email_op.execute(context)
 
 
 process_files = KerberosPythonOperator(

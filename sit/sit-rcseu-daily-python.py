@@ -50,11 +50,11 @@ hdfsStageFolder='/data/sit/rcseu/stage'
 jobFolder='/data_ext/apps/sit/rcseu'
 regular_processing_date = datetime.today() - timedelta(days=2)
 update_processing_date = datetime.today() - timedelta(days=3)
-missing_file_notification = ['ondrej.machacek@open-bean.com']#,'sit-support@t-mobile.cz','a5f84da9.tmst365.onmicrosoft.com@emea.teams.ms']
+missing_file_notification = ['ondrej.machacek@open-bean.com','sit-support@t-mobile.cz','a5f84da9.tmst365.onmicrosoft.com@emea.teams.ms']
 pending_file_notification = ['ondrej.machacek@open-bean.com','sit-support@t-mobile.cz','a5f84da9.tmst365.onmicrosoft.com@emea.teams.ms']
-natcos_to_check = ['tp', 'tc', 'td' ]
-stable_natcos=['cg', 'cr', 'mk', 'mt', 'st']
-natcos_to_process = ['cg', 'cr', 'mk', 'mt', 'st', 'tp', 'tc','td']
+natcos_to_check = [ 'td' , 'at']
+stable_natcos=['cg', 'cr', 'mk', 'mt', 'st', 'tp', 'tc']
+natcos_to_process = ['cg', 'cr', 'mk', 'mt', 'st', 'tp', 'tc','td', 'at']
 #natcos_to_process = [ 'tp']
 QS_remote = 'cdrs@10.105.180.206:/RCS-EU/PROD/'
 ########################## END CONFIGURATION ##########################
@@ -141,6 +141,8 @@ def get_files(natco):
     for type in ['activity', 'provision', 'register_requests']:
         file = glob.glob('{}/{}/{}_*.csv_{}.csv'.format(edgeLandingZone, natco, type, natco))
         pending_files += file  # '$edgeLandingZone/tp/register_requests_2022-03-16.csv_mt.csv'
+    if (len(pending_files) >0):
+        pending_files.sort(key=os.path.getmtime)
     return pending_files
 
 def check_pending(**context):
@@ -170,8 +172,10 @@ def reprocess_pending(**context):
             os.system("gzip {} && hdfs dfs -put -f {}.gz {} && rm {}.gz".format(file, file,hdfsArchiveFolder, file))
             dates.add(result.group(1))
         if (dates):
+            dates_p = list(dates)
+            dates_p.sort()
             natcos_reprocessed+=1
-            for date in dates:
+            for date in dates_p:
                 print("running reprocessing for natco: " + natco + " date: " + date)
                 date_update = datetime.strptime(date, '%Y-%m-%d') - timedelta(days=1)
                 command = spark_submit_template.format(edgeLibFolder, appFile, date_update.strftime('%Y-%m-%d'), natco,'update')
